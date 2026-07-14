@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# uv
+.uv/
+
+# Environment variables (secrets!)
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing / Coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data / Models (usually large — add exceptions as needed)
+data/
+models/
+*.pkl
+*.bin
+*.pt
+*.pth
+*.onnx
+*.faiss
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

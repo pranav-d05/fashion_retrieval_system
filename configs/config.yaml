@@ -1,0 +1,37 @@
+app:
+  name: "fashion-retrieval-system"
+  version: "1.0.0"
+
+qdrant:
+  host: "localhost"        # Override with QDRANT_HOST env var
+  port: 6333
+  collection_name: "fashion_images"
+  api_key: null            # Set QDRANT_API_KEY env var for Qdrant Cloud
+
+vectors:
+  fashionclip:
+    name: "fashionclip_embedding"
+    size: 512
+    distance: "Cosine"
+  caption:
+    name: "caption_embedding"
+    size: 768
+    distance: "Cosine"
+
+indexing:
+  batch_size: 16
+  image_extensions:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".webp"
+
+retrieval:
+  retrieval_top_k: 50
+  rerank_top_k: 10
+  fashionclip_weight: 0.5
+  caption_weight: 0.5
+
+logging:
+  level: "INFO"
+  format: "text"

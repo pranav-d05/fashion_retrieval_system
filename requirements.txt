@@ -1,0 +1,15 @@
+# ============================================================
+# This file is generated from pyproject.toml for compatibility.
+# The canonical dependency source is pyproject.toml.
+#
+# To regenerate:
+#   uv export --no-hashes --output-file requirements.txt
+#
+# To install directly with pip (not recommended):
+#   pip install -r requirements.txt
+# ============================================================
+# Use UV instead:
+#   uv sync                   # Install all dependencies
+#   uv sync --group dev       # Include dev dependencies
+#   uv run build-index        # Run indexer
+#   uv run search             # Run search CLI

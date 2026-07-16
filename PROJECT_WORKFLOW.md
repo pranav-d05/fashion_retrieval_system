@@ -22,7 +22,7 @@ Configured in `configs/models.yaml`.
 - Structured parser model (used both online and offline metadata extraction): `Qwen/Qwen2.5-1.5B-Instruct`
 - Image and text embedding model for fashion space: `patrickjohncyh/fashion-clip`
 - Caption embedding model: `BAAI/bge-base-en-v1.5`
-- Reranker model: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+- Reranker model: `BAAI/bge-reranker-v2-m3`
 
 ## 3. Core Data Schema
 
@@ -56,7 +56,13 @@ Primary entry point: `scripts/build_index.py`.
 - `HF_HOME` defaults to `D:\hf_cache`
 - `HUGGINGFACE_HUB_CACHE` defaults to `D:\hf_cache\hub`
 
-3. Initialize components:
+3. Environment overrides are loaded from `.env` when available.
+- `QDRANT_LOCAL_PATH` overrides embedded local Qdrant storage
+- `QDRANT_HOST` overrides the Qdrant host in server mode
+- `QDRANT_API_KEY` sets the Qdrant API key
+- `HF_TOKEN` is used for Hugging Face model downloads
+
+4. Initialize components:
 - caption generator: `src/vlm/caption_generator.py` (uses VLM backend)
 - metadata extractor: `src/vlm/metadata_extractor.py` (uses Qwen 1.5B text model)
 - FashionCLIP embedder: `src/embeddings/fashionclip_embedder.py`
@@ -64,14 +70,14 @@ Primary entry point: `scripts/build_index.py`.
 - Qdrant client wrapper: `src/qdrant_store.py`
 - index orchestrator: `src/indexing/staged_indexer.py` (loads/releases one model family per stage; resumable via JSONL checkpoints)
 
-4. For each image:
+5. For each image:
 - load image (`src/indexing/_image_loader.py`)
 - generate caption with VLM
 - generate structured metadata from caption using Qwen 1.5B
 - batch encode image with FashionCLIP
 - batch encode caption with BGE
 
-5. Upsert to Qdrant with:
+6. Upsert to Qdrant with:
 - named vectors:
   - `fashionclip_embedding`
   - `caption_embedding`
@@ -79,7 +85,7 @@ Primary entry point: `scripts/build_index.py`.
   - `image_id`, `image_path`, `caption`
   - `garments`, `accessories`, `outfit`, `scene`, `person`
 
-6. Continue with per-image and per-batch error handling so failures do not stop full indexing.
+7. Continue with per-image and per-batch error handling so failures do not stop full indexing.
 
 ## 5. Qdrant Storage and Filtering
 
@@ -160,16 +166,12 @@ Current code resolves `"auto"` explicitly per model (`src/vlm/vlm_backend.py`,
 - CUDA is used when available.
 - On CUDA, the two Qwen models (VLM caption + 1.5B parser/extractor) load
   **4-bit quantized** via `bitsandbytes`, so they fit on small-VRAM GPUs
-  (tested target: 4GB) without needing to spill anywhere.
+  without disk offloading.
 - CPU fallback loads in float32 with no `device_map`.
 
 Important practical detail:
-- `device_map="auto"` (accelerate's automatic CPU/disk offloading) is
-  deliberately **never** used. On small-VRAM GPUs it silently pages weights
-  to disk instead of erroring, which is not "slow" but effectively hangs
-  (this caused a real multi-hour stall during initial indexing runs). If a
-  model still doesn't fit after quantization, it will now raise a clear
-  CUDA OOM instead.
+- `device_map="auto"` is deliberately avoided. The code chooses CUDA, MPS,
+  or CPU explicitly so small-VRAM runs fail fast instead of paging to disk.
 
 ## 9. Utility and Validation Scripts
 
@@ -182,6 +184,8 @@ Important practical detail:
   - import and parser-level checks without full heavy inference
 - `scripts/check_versions.py`
   - reports installed package version compliance
+- `scripts/test_one_image.py`
+  - manual single-image end-to-end validation helper
 
 ## 10. End-to-End Flow Summary
 

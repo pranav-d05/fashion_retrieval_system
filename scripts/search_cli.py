@@ -16,8 +16,11 @@ This script:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+import subprocess
+from pathlib import Path
 
 
 
@@ -49,7 +52,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _print_results(results, top_k: int) -> None:
+def _print_results(results, top_k: int, parsed_metadata=None) -> None:
     """Pretty-print retrieval results to stdout."""
     from rich.console import Console
     from rich.panel import Panel
@@ -65,17 +68,60 @@ def _print_results(results, top_k: int) -> None:
     table.add_column("Rank", style="dim", width=5, justify="right")
     table.add_column("Score", width=8, justify="right")
     table.add_column("Caption", min_width=40)
-    table.add_column("Path", style="dim")
 
     for rank, result in enumerate(results[:top_k], start=1):
         table.add_row(
             str(rank),
             f"{result.score:.4f}",
             result.caption[:120] + ("…" if len(result.caption) > 120 else ""),
-            result.image_path,
         )
 
     console.print(table)
+
+    if parsed_metadata is not None:
+        console.print()
+        console.print(
+            Panel(
+                json.dumps(parsed_metadata.model_dump(), indent=2),
+                title="Parsed Query Metadata",
+                border_style="green",
+            )
+        )
+
+    for rank, result in enumerate(results[:top_k], start=1):
+        image_path = Path(result.image_path)
+        console.print()
+        console.print(
+            Panel(
+                f"[bold]Rank {rank}[/bold]  [cyan]{result.score:.4f}[/cyan]\n"
+                f"[bold]Caption[/bold]\n{result.caption}\n\n"
+                f"[bold]Metadata[/bold]\n{json.dumps(result.metadata.model_dump(), indent=2)}",
+                title=image_path.name,
+                border_style="cyan",
+            )
+        )
+
+        if image_path.exists():
+            try:
+                _open_image(image_path)
+                console.print(f"[dim]Opened image: {image_path.name}[/dim]")
+            except Exception as exc:  # noqa: BLE001
+                console.print(f"[dim]Could not open image: {exc}[/dim]")
+        else:
+            console.print(f"[dim]Image not found: {image_path}[/dim]")
+
+
+def _open_image(image_path: Path) -> None:
+    """Open an image in the default viewer for the current platform."""
+    if sys.platform.startswith("win"):
+        os.startfile(image_path)  # type: ignore[attr-defined]
+        return
+
+    if sys.platform == "darwin":
+        subprocess.Popen(["open", str(image_path)])
+        return
+
+    subprocess.Popen(["xdg-open", str(image_path)])
 
 
 def _run_query(query: str, pipeline: dict, top_k: int) -> None:
@@ -88,7 +134,7 @@ def _run_query(query: str, pipeline: dict, top_k: int) -> None:
     candidates = pipeline["retriever"].retrieve(query, parsed)
     results = pipeline["reranker"].rerank(query, candidates)
 
-    _print_results(results, top_k)
+    _print_results(results, top_k, parsed_metadata=parsed)
 
 
 def main(argv: list[str] | None = None) -> None:

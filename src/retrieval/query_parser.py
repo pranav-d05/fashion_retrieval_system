@@ -176,7 +176,8 @@ class QueryParser:
         raw = self._tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
         logger.debug("QueryParser raw output: %.150s", raw)
-        return _parse_metadata(raw)
+        metadata = _parse_metadata(raw)
+        return _normalize_metadata_for_query(query, metadata)
 
 
 # ---------------------------------------------------------------------------
@@ -208,3 +209,35 @@ def _strip_code_fences(text: str) -> str:
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
     return text.strip()
+
+
+def _normalize_metadata_for_query(query: str, metadata: FashionMetadata) -> FashionMetadata:
+    """Apply small deterministic fixes for common query phrases.
+
+    The LLM parser is good at broad extraction but can produce values that are
+    syntactically valid and still too strict for retrieval. This post-pass keeps
+    common fashion search phrases aligned with the indexed metadata vocabulary.
+    """
+    normalized_query = query.lower()
+
+    if "city walk" in normalized_query or "city stroll" in normalized_query or "walk in the city" in normalized_query:
+        metadata.scene.location = "outdoors"
+        metadata.scene.environment = "urban"
+        metadata.scene.activity = "walking"
+
+    if "city" in normalized_query and metadata.scene.location is None:
+        metadata.scene.location = "outdoors"
+
+    if "indoor" in normalized_query and metadata.scene.location == "indoor":
+        metadata.scene.location = "indoors"
+
+    if "weekend" in normalized_query and not metadata.outfit.occasions:
+        metadata.outfit.occasions = ["casual outing"]
+
+    if "casual" in normalized_query and "casual" not in metadata.outfit.styles:
+        metadata.outfit.styles.append("casual")
+
+    if "walk" in normalized_query and not metadata.scene.activity:
+        metadata.scene.activity = "walking"
+
+    return metadata

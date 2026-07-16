@@ -33,18 +33,29 @@ Online Retrieval Pipeline
 uv sync
 
 # 2. Copy and fill in environment variables
-cp .env.example .env
+# PowerShell
+Copy-Item .env.example .env
+# or on macOS / Linux
+# cp .env.example .env
 
 # 3. Build the index (uses embedded local Qdrant at .qdrant by default)
 # Drop your dataset images into data/images/ first (nested subfolders are fine)
-uv run build-index --image-dir data/images
+uv run build-index --image-dir data/images --skip-existing
 
 # 4. Search
 uv run search --query "blue shirt in a park"
 ```
 
 Optional: use Qdrant server mode instead of embedded local mode by setting
-`qdrant.local_path: null` and configuring `qdrant.host` / `qdrant.port`.
+`QDRANT_LOCAL_PATH=` in `.env` or `qdrant.local_path: null` in
+`configs/config.yaml`, then configuring `QDRANT_HOST` / `QDRANT_API_KEY`
+as needed.
+
+Common environment variables:
+
+- `QDRANT_LOCAL_PATH` to disable embedded local storage and use server mode
+- `QDRANT_HOST` and `QDRANT_API_KEY` for Qdrant server / cloud connections
+- `HF_TOKEN` for Hugging Face model downloads
 
 ## Project Structure
 
@@ -92,6 +103,9 @@ This installs `torch+cu124` automatically. No extra flags needed.
 The indexer writes JSONL checkpoints to `data/.index_staging/` after each
 image. If a run is interrupted, simply re-run the same command and it will
 pick up where it left off — already-captioned images are skipped.
+
+The `--skip-existing` flag makes reruns faster when the collection already
+contains most of the dataset.
 
 To force a clean re-index from scratch:
 

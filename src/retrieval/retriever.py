@@ -19,6 +19,13 @@ logger = logging.getLogger(__name__)
 # RRF smoothing constant (standard value from the original paper)
 _RRF_K = 60
 
+# If a metadata-filtered vector search returns fewer than this many hits,
+# the filter is treated as too strict and we fall back to an unfiltered
+# search. Canonical vocabulary in prompts + MatchText for subcategory/
+# environment fields reduces spurious fallbacks, but this safety net
+# ensures the pipeline never returns a near-empty result set.
+_MIN_FILTERED_HITS = 5
+
 
 class Retriever:
     """Performs hybrid retrieval combining FashionCLIP + BGE vector search.
@@ -75,7 +82,7 @@ class Retriever:
 
         # --- FashionCLIP vector search ---
         clip_query = self._clip_embedder.encode_texts([query])[0].tolist()
-        clip_hits = self._store.search_by_vector(
+        clip_hits = self._search_with_fallback(
             vector_name=self._vec_cfg.fashionclip.name,
             query_vector=clip_query,
             top_k=top_k,
@@ -84,7 +91,7 @@ class Retriever:
 
         # --- BGE caption vector search ---
         bge_query = self._text_embedder.encode([query])[0].tolist()
-        caption_hits = self._store.search_by_vector(
+        caption_hits = self._search_with_fallback(
             vector_name=self._vec_cfg.caption.name,
             query_vector=bge_query,
             top_k=top_k,
@@ -112,6 +119,53 @@ class Retriever:
 
         logger.info("Retrieved %d candidates after RRF fusion.", len(results))
         return results
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _search_with_fallback(
+        self,
+        vector_name: str,
+        query_vector: list[float],
+        top_k: int,
+        payload_filter,
+    ):
+        """Search a named vector, falling back to an unfiltered search if the
+        metadata filter is too strict.
+
+        A payload filter built from parsed query attributes requires exact
+        string matches (e.g. color="red", category="tie") against whatever
+        vocabulary the VLM used at indexing time. When that vocabulary
+        doesn't line up, a legitimately-strict compositional filter can
+        starve the pipeline of candidates entirely. Rather than surfacing an
+        (almost) empty result set, we detect that case and retry without the
+        filter so ranking is left to the embedding similarity + reranker.
+        """
+        if payload_filter is None:
+            return self._store.search_by_vector(
+                vector_name=vector_name, query_vector=query_vector, top_k=top_k
+            )
+
+        hits = self._store.search_by_vector(
+            vector_name=vector_name,
+            query_vector=query_vector,
+            top_k=top_k,
+            payload_filter=payload_filter,
+        )
+        if len(hits) >= min(_MIN_FILTERED_HITS, top_k):
+            return hits
+
+        logger.info(
+            "Metadata filter on '%s' returned only %d hits (< %d) — "
+            "falling back to unfiltered vector search.",
+            vector_name,
+            len(hits),
+            _MIN_FILTERED_HITS,
+        )
+        return self._store.search_by_vector(
+            vector_name=vector_name, query_vector=query_vector, top_k=top_k
+        )
 
 
 # ---------------------------------------------------------------------------

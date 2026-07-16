@@ -113,6 +113,14 @@ class TestChunkList:
         chunks = list(chunk_list(items, 1))
         assert chunks == [[10], [20], [30]]
 
+    def test_non_positive_chunk_size_raises(self):
+        with pytest.raises(ValueError, match="greater than zero"):
+            list(chunk_list([1, 2], 0))
+
+    def test_custom_extensions_are_case_insensitive(self, tmp_path: Path):
+        (tmp_path / "a.JPG").touch()
+        assert [path.name for path in iter_images(tmp_path, extensions=[".JPG"])] == ["a.JPG"]
+
 
 class TestTimer:
     def test_runs_without_error(self):

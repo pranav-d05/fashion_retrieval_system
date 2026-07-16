@@ -3,6 +3,7 @@ app:
   version: "1.0.0"
 
 qdrant:
+  local_path: ".qdrant"      # Set null to use host/port server mode
   host: "localhost"        # Override with QDRANT_HOST env var
   port: 6333
   collection_name: "fashion_images"
@@ -27,10 +28,10 @@ indexing:
     - ".webp"
 
 retrieval:
-  retrieval_top_k: 50
+  retrieval_top_k: 100
   rerank_top_k: 10
-  fashionclip_weight: 0.5
-  caption_weight: 0.5
+  fashionclip_weight: 0.6
+  caption_weight: 0.4
 
 logging:
   level: "INFO"

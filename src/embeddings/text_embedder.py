@@ -10,11 +10,23 @@ from __future__ import annotations
 import logging
 
 import numpy as np
+import torch
 from sentence_transformers import SentenceTransformer
 
 from src.utils.config_loader import TextEmbeddingConfig
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_device(device: str) -> str:
+    """Resolve 'auto' to the best available torch device."""
+    if device == "auto":
+        if torch.cuda.is_available():
+            return "cuda"
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
+    return device
 
 
 class TextEmbedder:
@@ -25,11 +37,11 @@ class TextEmbedder:
     """
 
     def __init__(self, config: TextEmbeddingConfig) -> None:
-        device = config.device if config.device != "auto" else None
+        device = _resolve_device(config.device)
         logger.info(
             "Loading TextEmbedder '%s' (device=%s)…",
             config.model_name,
-            device or "auto",
+            device,
         )
         self._model = SentenceTransformer(
             config.model_name,

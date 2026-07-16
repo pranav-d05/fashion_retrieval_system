@@ -51,7 +51,10 @@ class FashionCLIPEmbedder:
             self._device,
         )
 
-        self._model = CLIPModel.from_pretrained(config.model_name).to(self._device)
+        self._model = CLIPModel.from_pretrained(
+            config.model_name,
+            low_cpu_mem_usage=True,
+        ).to(self._device)
         self._processor = CLIPProcessor.from_pretrained(config.model_name)
         self._model.eval()
 
@@ -74,10 +77,11 @@ class FashionCLIPEmbedder:
             return np.empty((0, 512), dtype=np.float32)
 
         inputs = self._processor(images=images, return_tensors="pt", padding=True)
-        inputs = {k: v.to(self._device) for k, v in inputs.items()}
+        pixel_values = inputs["pixel_values"].to(self._device)
 
         with torch.no_grad():
-            features = self._model.get_image_features(**inputs)
+            vision_outputs = self._model.vision_model(pixel_values=pixel_values)
+            features = self._model.visual_projection(vision_outputs.pooler_output)
             features = _l2_normalize(features)
 
         return features.cpu().float().numpy()
@@ -95,12 +99,18 @@ class FashionCLIPEmbedder:
             return np.empty((0, 512), dtype=np.float32)
 
         inputs = self._processor(
-            text=texts, return_tensors="pt", padding=True, truncation=True
+            text=texts, return_tensors="pt", padding=True,
+            truncation=True, max_length=77,  # CLIP hard limit
         )
-        inputs = {k: v.to(self._device) for k, v in inputs.items()}
+        input_ids = inputs["input_ids"].to(self._device)
+        attention_mask = inputs["attention_mask"].to(self._device)
 
         with torch.no_grad():
-            features = self._model.get_text_features(**inputs)
+            text_outputs = self._model.text_model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+            )
+            features = self._model.text_projection(text_outputs.pooler_output)
             features = _l2_normalize(features)
 
         return features.cpu().float().numpy()

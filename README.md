@@ -5,16 +5,25 @@
 ## Architecture
 
 ```
-User Query
-  ├─ FashionCLIP Embedding      → visual semantic similarity
-  ├─ BGE Embedding              → caption semantic similarity
-  └─ Structured Parser (Qwen)  → per-attribute metadata filter
+Offline Indexing Pipeline
+  Image Dataset → Preprocessing → Qwen2.5-VL / Florence-2
+                        ├─ Natural Language Caption → BGE Text Encoder → caption_embedding
+                        ├─ Caption → Qwen/Qwen2.5-1.5B-Instruct → structured metadata
+                        └─ FashionCLIP Image Encoder → fashionclip_embedding
           ↓
-  Qdrant Hybrid Search (named vectors + metadata filter)
+  Qdrant Collection (named vectors + structured payload)
+
+Online Retrieval Pipeline
+  User Query → Preprocessing →
+      ├─ FashionCLIP Text Encoder → query embedding
+      ├─ BGE Text Encoder → caption query embedding
+                        └─ Qwen/Qwen2.5-1.5B-Instruct → structured query metadata
           ↓
-  Cross-Encoder Reranking
+  Qdrant Hybrid Retrieval (named-vector search + payload filtering)
           ↓
-  Ranked Results
+  Candidate Image IDs → Cross-Encoder Reranking → Qdrant Lookup
+          ↓
+  Final Ranked Results
 ```
 
 ## Quick Start
@@ -26,15 +35,16 @@ uv sync
 # 2. Copy and fill in environment variables
 cp .env.example .env
 
-# 3. Start Qdrant (Docker)
-docker run -p 6333:6333 qdrant/qdrant
+# 3. Build the index (uses embedded local Qdrant at .qdrant by default)
+# Drop your dataset images into data/images/ first (nested subfolders are fine)
+uv run build-index --image-dir data/images
 
-# 4. Build the index
-uv run build-index --data-dir data/images
-
-# 5. Search
+# 4. Search
 uv run search --query "blue shirt in a park"
 ```
+
+Optional: use Qdrant server mode instead of embedded local mode by setting
+`qdrant.local_path: null` and configuring `qdrant.host` / `qdrant.port`.
 
 ## Project Structure
 
@@ -44,14 +54,13 @@ fashion-retrieval-system/
 │   ├── config.yaml          # Qdrant, retrieval params, batch sizes
 │   └── models.yaml          # All model names/paths
 ├── src/
-│   ├── ingestion/           # Dataset loading + image preprocessing
-│   ├── indexing/            # Caption, metadata, embedding generation
-│   ├── services/            # Model wrappers (FashionCLIP, BGE, Qwen, CrossEncoder)
-│   ├── retrieval/           # Hybrid retrieval + reranking
-│   ├── database/            # Qdrant client
-│   ├── engine/              # Pipeline orchestration
-│   ├── schemas/             # Canonical Pydantic metadata schema
-│   └── utils/               # Config, logging, helpers
+│   ├── embeddings/          # FashionCLIP and BGE encoders
+│   ├── indexing/            # Image loading and offline indexing orchestration
+│   ├── retrieval/           # Query parsing, hybrid retrieval, reranking
+│   ├── utils/               # Config, logging, helpers
+│   ├── vlm/                 # Captioning and structured metadata extraction
+│   ├── qdrant_store.py      # Qdrant client wrapper
+│   └── schemas.py           # Canonical Pydantic schema
 ├── scripts/
 │   ├── build_index.py       # Offline indexing entry point
 │   └── search_cli.py        # Online retrieval entry point
@@ -66,11 +75,28 @@ fashion-retrieval-system/
 | Structured Query Parser | `Qwen/Qwen2.5-1.5B-Instruct` |
 | Image + Text Embedding | `patrickjohncyh/fashion-clip` |
 | Caption Embedding | `BAAI/bge-base-en-v1.5` |
-| Semantic Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
+| Semantic Reranker | `BAAI/bge-reranker-v2-m3` |
 
 ## GPU / CUDA
 
+CUDA 12.4 wheels are pre-configured in `pyproject.toml` — just run:
+
 ```bash
-# Install PyTorch with CUDA 12.1 wheels
-uv sync --extra-index-url https://download.pytorch.org/whl/cu121
+uv sync
+```
+
+This installs `torch+cu124` automatically. No extra flags needed.
+
+## Resumable Indexing
+
+The indexer writes JSONL checkpoints to `data/.index_staging/` after each
+image. If a run is interrupted, simply re-run the same command and it will
+pick up where it left off — already-captioned images are skipped.
+
+To force a clean re-index from scratch:
+
+```bash
+Remove-Item -Recurse -Force data/.index_staging   # Windows (PowerShell)
+# or: rm -rf data/.index_staging                  # Linux / macOS
+uv run build-index --image-dir data/images
 ```

@@ -8,7 +8,6 @@ Keeping a single loader prevents the large VLM from being loaded twice.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import torch
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
@@ -18,26 +17,73 @@ from src.utils.config_loader import VLMConfig
 logger = logging.getLogger(__name__)
 
 
+def _resolve_device(device: str) -> str:
+    """Resolve 'auto' to the best available torch device.
+
+    Deliberately never returns a disk-offload / accelerate 'auto' device_map —
+    on small-VRAM GPUs that silently pages weights to disk, which is
+    catastrophically slow (effectively hangs) rather than erroring out.
+    """
+    if device == "auto":
+        if torch.cuda.is_available():
+            return "cuda"
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
+    return device
+
+
 class VLMBackend:
     """Loads and owns the Qwen2.5-VL model and processor.
 
     Intended to be instantiated once and injected into both
     ``CaptionGenerator`` and ``MetadataExtractor``.
+
+    On CUDA, the model is loaded 4-bit quantized (via bitsandbytes) so a
+    ~3B-parameter model fits comfortably on small-VRAM GPUs (e.g. 4GB laptop
+    GPUs) without falling back to disk offloading. On CPU, it loads in
+    float32 with no device_map, so it either fits in RAM or fails with a
+    clear OOM instead of silently crawling from disk.
     """
 
     def __init__(self, config: VLMConfig) -> None:
-        device_map: Any = config.device  # "auto", "cuda", "cpu", …
+        device = _resolve_device(config.device)
         logger.info(
-            "Loading VLM '%s' (device_map=%s) — this may take a minute…",
+            "Loading VLM '%s' on device='%s' — this may take a minute…",
             config.model_name,
-            device_map,
+            device,
         )
+
+        load_kwargs: dict = {"low_cpu_mem_usage": True}
+
+        if device == "cuda":
+            try:
+                from transformers import BitsAndBytesConfig
+
+                load_kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_use_double_quant=True,
+                )
+                load_kwargs["device_map"] = {"": 0}
+                logger.info("Loading VLM 4-bit quantized (bitsandbytes) on CUDA.")
+            except ImportError:
+                logger.warning(
+                    "bitsandbytes not installed — loading VLM in fp16 on CUDA "
+                    "without quantization. Install bitsandbytes if this OOMs "
+                    "or falls back to disk offload on small-VRAM GPUs."
+                )
+                load_kwargs["torch_dtype"] = torch.float16
+        else:
+            load_kwargs["torch_dtype"] = torch.float32
 
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             config.model_name,
-            torch_dtype="auto",
-            device_map=device_map,
+            **load_kwargs,
         )
+        if "device_map" not in load_kwargs:
+            self.model = self.model.to(device)
         self.model.eval()
 
         self.processor = AutoProcessor.from_pretrained(config.model_name)

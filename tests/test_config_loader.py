@@ -43,6 +43,7 @@ class TestGetAppSettings:
     def test_qdrant_defaults(self):
         get_app_settings.cache_clear()
         settings = get_app_settings()
+        assert settings.qdrant.local_path == ".qdrant"
         assert settings.qdrant.host == "localhost"
         assert settings.qdrant.port == 6333
         assert settings.qdrant.collection_name == "fashion_images"
@@ -63,7 +64,7 @@ class TestGetAppSettings:
     def test_retrieval_defaults(self):
         get_app_settings.cache_clear()
         settings = get_app_settings()
-        assert settings.retrieval.retrieval_top_k == 50
+        assert settings.retrieval.retrieval_top_k == 100
         assert settings.retrieval.rerank_top_k == 10
         assert settings.retrieval.fashionclip_weight + settings.retrieval.caption_weight == pytest.approx(1.0)
 
@@ -77,6 +78,13 @@ class TestGetAppSettings:
         monkeypatch.setenv("QDRANT_HOST", "qdrant-cloud.example.com")
         settings = get_app_settings()
         assert settings.qdrant.host == "qdrant-cloud.example.com"
+        get_app_settings.cache_clear()  # Clean up
+
+    def test_qdrant_local_path_env_override(self, monkeypatch):
+        get_app_settings.cache_clear()
+        monkeypatch.setenv("QDRANT_LOCAL_PATH", "D:/tmp/qdrant_local")
+        settings = get_app_settings()
+        assert settings.qdrant.local_path == "D:/tmp/qdrant_local"
         get_app_settings.cache_clear()  # Clean up
 
     def test_qdrant_api_key_env_override(self, monkeypatch):
@@ -97,7 +105,7 @@ class TestGetModelSettings:
         get_model_settings.cache_clear()
         settings = get_model_settings()
         assert "Qwen" in settings.vision_language_model.model_name
-        assert settings.vision_language_model.max_new_tokens == 512
+        assert settings.vision_language_model.max_new_tokens == 400
 
     def test_fashionclip_config(self):
         get_model_settings.cache_clear()
@@ -113,13 +121,13 @@ class TestGetModelSettings:
     def test_cross_encoder_config(self):
         get_model_settings.cache_clear()
         settings = get_model_settings()
-        assert "cross-encoder" in settings.cross_encoder.model_name
+        assert settings.cross_encoder.model_name == "BAAI/bge-reranker-v2-m3"
         assert settings.cross_encoder.max_length == 512
 
     def test_query_parser_config(self):
         get_model_settings.cache_clear()
         settings = get_model_settings()
-        assert settings.query_parser.max_new_tokens == 256
+        assert settings.query_parser.max_new_tokens == 512
 
 
 class TestPydanticModels:

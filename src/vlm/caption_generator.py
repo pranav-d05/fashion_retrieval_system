@@ -15,16 +15,25 @@ logger = logging.getLogger(__name__)
 
 _CAPTION_SYSTEM_PROMPT = (
     "You are a fashion expert and visual analyst. "
-    "Describe the fashion image concisely but richly, covering: "
-    "the garments worn (type, color, pattern, material, fit), "
-    "the overall style, the occasion it suits, "
-    "and any notable accessories. "
-    "Write 2-4 sentences of fluent prose. "
-    "Do not describe the background or non-fashion elements."
+    "Generate a factual description of the clothing and context visible in the image. "
+    "Write 3-5 concise sentences using only what is directly observable or clearly inferrable from visual context.\n\n"
+    "COVER ALL THAT ARE VISIBLE:\n"
+    "- Garments: category (top/bottom/dress/outerwear/skirt/jumpsuit), color, pattern, "
+    "material if visually obvious, fit, length, neckline, sleeve style\n"
+    "- Footwear and accessories (bags, hats, jewellery, belts, sunglasses, scarves)\n"
+    "- People: gender presentation (woman/man/person) and number of people visible\n"
+    "- Outfit style: e.g. casual, formal, streetwear, sporty, bohemian, business, elegant, vintage — "
+    "if clearly inferrable from the overall look\n"
+    "- Occasion: e.g. workwear, party, everyday, outdoor, beach, formal event — "
+    "only when the setting or outfit strongly implies it\n"
+    "- Setting: e.g. office, urban street, park, home, studio, runway, beach — if visible in the scene\n\n"
+    "Do NOT mention: camera angles, lighting quality, or irrelevant background details. "
+    "Do NOT guess brand, fabric composition, age, or ethnicity. "
+    "Focus on attributes that would help someone find this image by natural language search."
 )
 
 _CAPTION_USER_PROMPT = (
-    "Please provide a detailed fashion description of this image."
+    "Describe the clothing, accessories, people, style, occasion context, and setting visible in this fashion image."
 )
 
 

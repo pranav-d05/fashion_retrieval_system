@@ -39,6 +39,7 @@ class AppConfig(BaseModel):
 
 
 class QdrantConfig(BaseModel):
+    local_path: str | None = ".qdrant"
     host: str = "localhost"
     port: int = 6333
     collection_name: str = "fashion_images"
@@ -133,13 +134,16 @@ class ModelSettings(BaseModel):
 def get_app_settings() -> AppSettings:
     """Load and cache application settings from config.yaml.
 
-    Qdrant host and API key can be overridden at runtime via:
+    Qdrant settings can be overridden at runtime via:
+        QDRANT_LOCAL_PATH=<path>
         QDRANT_HOST=<host>
         QDRANT_API_KEY=<key>
     """
     data = _load("config.yaml")
 
     # Apply environment variable overrides for infrastructure config
+    if local_path := os.getenv("QDRANT_LOCAL_PATH"):
+        data.setdefault("qdrant", {})["local_path"] = local_path
     if host := os.getenv("QDRANT_HOST"):
         data.setdefault("qdrant", {})["host"] = host
     if key := os.getenv("QDRANT_API_KEY"):

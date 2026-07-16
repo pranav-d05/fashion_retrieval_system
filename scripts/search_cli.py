@@ -16,8 +16,17 @@ This script:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
+
+
+def _configure_hf_cache() -> None:
+    # Honour any HF_HOME already set in the environment / .env file;
+    # only fall back to D:\hf_cache if nothing is configured.
+    hf_home = os.environ.get("HF_HOME", r"D:\hf_cache")
+    os.environ.setdefault("HF_HOME", hf_home)
+    os.environ.setdefault("HUGGINGFACE_HUB_CACHE", os.path.join(hf_home, "hub"))
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -83,6 +92,7 @@ def _run_query(query: str, pipeline: dict, top_k: int) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
+    _configure_hf_cache()
     args = _parse_args(argv)
 
     # ---- Deferred imports ----
@@ -123,6 +133,7 @@ def main(argv: list[str] | None = None) -> None:
     query_parser = QueryParser(model_cfg.query_parser)
     retriever = Retriever(app_cfg, clip_embedder, text_embedder, store)
     reranker = Reranker(model_cfg.cross_encoder, app_cfg)
+    reranker.attach_store(store)
 
     pipeline = {
         "query_parser": query_parser,

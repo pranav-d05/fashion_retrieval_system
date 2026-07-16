@@ -8,13 +8,41 @@ CrossEncoder. The reranked results form the final output of the pipeline.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from sentence_transformers import CrossEncoder
+import torch
 
+from src.qdrant_store import QdrantStore
 from src.schemas import RetrievalResult
 from src.utils.config_loader import AppSettings, CrossEncoderConfig
 
 logger = logging.getLogger(__name__)
+
+# Kept module-level for straightforward dependency injection in tests, while
+# avoiding an eager sentence-transformers import for callers that never build
+# a reranker (and for lightweight CLI/help operations).
+CrossEncoder: Any | None = None
+
+
+def _resolve_device(device: str) -> str:
+    """Resolve 'auto' to the best available torch device."""
+    if device == "auto":
+        if torch.cuda.is_available():
+            return "cuda"
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
+    return device
+
+
+def _get_cross_encoder() -> Any:
+    """Load the optional heavyweight CrossEncoder dependency on demand."""
+    global CrossEncoder
+    if CrossEncoder is None:
+        from sentence_transformers import CrossEncoder as SentenceCrossEncoder
+
+        CrossEncoder = SentenceCrossEncoder
+    return CrossEncoder
 
 
 class Reranker:
@@ -26,19 +54,29 @@ class Reranker:
     """
 
     def __init__(self, config: CrossEncoderConfig, settings: AppSettings) -> None:
-        device = config.device if config.device != "auto" else None
+        device = _resolve_device(config.device)
         logger.info(
             "Loading CrossEncoder '%s' (device=%s)…",
             config.model_name,
-            device or "auto",
+            device,
         )
-        self._model = CrossEncoder(
+        model_kwargs = {}
+        if device != "cpu" and torch.cuda.is_available():
+            model_kwargs["torch_dtype"] = torch.float16
+
+        self._model = _get_cross_encoder()(
             config.model_name,
             max_length=config.max_length,
-            device=device,
+            device=device if device != "cpu" else None,  # sentence-transformers prefers None for CPU
+            model_kwargs=model_kwargs,
         )
         self._top_k = settings.retrieval.rerank_top_k
+        self._store: QdrantStore | None = None
         logger.info("CrossEncoder loaded successfully.")
+
+    def attach_store(self, store: QdrantStore) -> None:
+        """Attach the Qdrant store used for the final result lookup."""
+        self._store = store
 
     # ------------------------------------------------------------------
     # Public API
@@ -71,10 +109,22 @@ class Reranker:
         ranked = sorted(candidates, key=lambda r: r.score, reverse=True)
         top = ranked[: self._top_k]
 
+        if self._store is None:
+            logger.warning("No Qdrant store attached; returning reranked candidates directly.")
+            return top
+
+        hydrated = self._store.lookup_by_image_ids([candidate.image_id for candidate in top])
+        hydrated_map = {result.image_id: result for result in hydrated}
+        final_results: list[RetrievalResult] = []
+        for candidate in top:
+            result = hydrated_map.get(candidate.image_id, candidate)
+            result.score = candidate.score
+            final_results.append(result)
+
         logger.info(
             "Reranking complete. Top score=%.4f, bottom score=%.4f (of %d).",
-            top[0].score if top else float("nan"),
-            top[-1].score if top else float("nan"),
+            final_results[0].score if final_results else float("nan"),
+            final_results[-1].score if final_results else float("nan"),
             len(candidates),
         )
-        return top
+        return final_results

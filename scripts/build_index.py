@@ -13,8 +13,17 @@ This script:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
+
+
+def _configure_hf_cache() -> None:
+    # Honour any HF_HOME already set in the environment / .env file;
+    # only fall back to D:\hf_cache if nothing is configured.
+    hf_home = os.environ.get("HF_HOME", r"D:\hf_cache")
+    os.environ.setdefault("HF_HOME", hf_home)
+    os.environ.setdefault("HUGGINGFACE_HUB_CACHE", os.path.join(hf_home, "hub"))
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -32,26 +41,22 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--skip-existing",
         action="store_true",
         default=False,
-        help="Skip images already indexed in Qdrant (not yet implemented).",
+        help="Skip images already indexed in Qdrant.",
     )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> None:
+    _configure_hf_cache()
     args = _parse_args(argv)
 
     # ----------------------------------------------------------------
     # Imports are deferred so that --help is always fast
     # ----------------------------------------------------------------
-    from src.embeddings.fashionclip_embedder import FashionCLIPEmbedder
-    from src.embeddings.text_embedder import TextEmbedder
-    from src.indexing.indexer import Indexer
+    from src.indexing.staged_indexer import StagedIndexer
     from src.qdrant_store import QdrantStore
     from src.utils.config_loader import get_app_settings, get_model_settings
     from src.utils.logging_config import setup_logging
-    from src.vlm.caption_generator import CaptionGenerator
-    from src.vlm.metadata_extractor import MetadataExtractor
-    from src.vlm.vlm_backend import VLMBackend
 
     # ---- Setup ----
     app_cfg = get_app_settings()
@@ -63,32 +68,19 @@ def main(argv: list[str] | None = None) -> None:
     logger.info("Starting offline indexing pipeline.")
     logger.info("Image directory: %s", args.image_dir.resolve())
 
-    # ---- Instantiate components ----
-    # VLM shared backend (loaded once)
-    vlm_backend = VLMBackend(model_cfg.vision_language_model)
-    caption_gen = CaptionGenerator(vlm_backend)
-    metadata_ext = MetadataExtractor(vlm_backend)
-
-    # Embedding models
-    clip_embedder = FashionCLIPEmbedder(model_cfg.fashionclip)
-    text_embedder = TextEmbedder(model_cfg.text_embedding)
-
-    # Qdrant
+    # Only Qdrant is opened here. StagedIndexer loads and releases each model
+    # family immediately around the stage that uses it.
     store = QdrantStore(app_cfg)
-
-    # Indexer
-    indexer = Indexer(
+    indexer = StagedIndexer(
         settings=app_cfg,
-        caption_gen=caption_gen,
-        metadata_ext=metadata_ext,
-        clip_embedder=clip_embedder,
-        text_embedder=text_embedder,
-        qdrant_store=store,
+        model_settings=model_cfg,
+        store=store,
+        staging_dir=Path("data/.index_staging"),
     )
 
     # ---- Run ----
     try:
-        indexer.index_directory(args.image_dir)
+        indexer.index_directory(args.image_dir, skip_existing=args.skip_existing)
     except FileNotFoundError as exc:
         logger.error("%s", exc)
         sys.exit(1)

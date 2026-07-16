@@ -26,7 +26,11 @@ def iter_images(directory: Path, extensions: list[str] | None = None) -> Iterato
     if not directory.exists():
         raise FileNotFoundError(f"Image directory not found: {directory}")
 
-    allowed = frozenset(extensions) if extensions else SUPPORTED_EXTENSIONS
+    allowed = (
+        frozenset(extension.lower() for extension in extensions)
+        if extensions
+        else SUPPORTED_EXTENSIONS
+    )
 
     for path in sorted(directory.rglob("*")):
         if path.is_file() and path.suffix.lower() in allowed:
@@ -35,6 +39,8 @@ def iter_images(directory: Path, extensions: list[str] | None = None) -> Iterato
 
 def chunk_list(items: list, chunk_size: int) -> Generator[list, None, None]:
     """Yield successive chunks of size `chunk_size` from `items`."""
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be greater than zero")
     for i in range(0, len(items), chunk_size):
         yield items[i : i + chunk_size]
 

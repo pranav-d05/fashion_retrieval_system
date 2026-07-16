@@ -1,12 +1,14 @@
 vision_language_model:
   model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
-  max_new_tokens: 512
-  # "auto" lets accelerate choose the best device; override with "cuda", "cpu", "mps"
+  # 3-5 sentences covering garments, accessories, person, style, occasion and scene — 400 tokens gives enough headroom.
+  max_new_tokens: 400
+  # "auto" resolves to cuda/mps/cpu explicitly (never accelerate disk-offload);
+  # override with "cuda", "cpu", "mps" if you want to force one.
   device: "auto"
 
 query_parser:
   model_name: "Qwen/Qwen2.5-1.5B-Instruct"
-  max_new_tokens: 256
+  max_new_tokens: 512
   device: "auto"
 
 fashionclip:
@@ -19,6 +21,6 @@ text_embedding:
   normalize_embeddings: true
 
 cross_encoder:
-  model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  model_name: "BAAI/bge-reranker-v2-m3"
   device: "auto"
   max_length: 512

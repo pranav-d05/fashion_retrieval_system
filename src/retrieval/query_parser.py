@@ -20,21 +20,32 @@ from src.utils.config_loader import QueryParserConfig
 
 logger = logging.getLogger(__name__)
 
-# Inline schema description (text only — no image)
+# Schema description injected into the LLM system prompt
 _SCHEMA_DESCRIPTION = """
 {
   "garments": [
     {
       "category": "string | null",
       "subcategory": "string | null",
-      "color": "string | null",
-      "pattern": "string | null",
+      "colors": ["string"],
+      "patterns": ["string"],
       "material": "string | null",
       "fit": "string | null",
-      "style": "string | null",
-      "occasion": "string | null"
+      "length": "string | null",
+      "neckline": "string | null"
     }
   ],
+  "accessories": [
+    {
+      "category": "string | null",
+      "subcategory": "string | null",
+      "colors": ["string"]
+    }
+  ],
+  "outfit": {
+    "styles": ["string"],
+    "occasions": ["string"]
+  },
   "scene": {
     "location": "string | null",
     "environment": "string | null",
@@ -50,33 +61,78 @@ _SCHEMA_DESCRIPTION = """
 _SYSTEM_PROMPT = (
     "You are a structured data extraction system for a fashion search engine. "
     "Given a user's natural language search query, extract structured fashion "
-    "attributes and return ONLY a valid JSON object matching the schema below. "
-    "Use null for attributes not mentioned in the query. "
-    "Return ONLY the JSON object — no explanations, no markdown, no extra text.\n\n"
+    "attributes and return ONLY a valid JSON object matching the schema below.\n\n"
+    "STRICT RULES:\n"
+    "1. Use null for single-value string fields not mentioned. "
+    "   Use [] (empty array) for list fields not mentioned.\n"
+    "2. colors and patterns MUST always be JSON arrays: e.g. [\"navy\", \"white\"].\n"
+    "3. styles and occasions MUST always be JSON arrays: e.g. [\"casual\", \"streetwear\"].\n"
+    "4. garments = clothing items (tops, bottoms, dresses, outerwear, skirts, jumpsuits). "
+    "   accessories = non-clothing items (bags, shoes, jewellery, hats, belts, watches, sunglasses, scarves, ties).\n"
+    "5. Return ONLY the JSON object — no markdown, no explanation, no extra text.\n\n"
+    "CANONICAL VOCABULARY — use these exact values where applicable:\n"
+    "- garment category: \"top\", \"bottom\", \"dress\", \"outerwear\", \"skirt\", \"jumpsuit\"\n"
+    "- accessory category: \"bag\", \"shoes\", \"hat\", \"jewellery\", \"belt\", \"watch\", \"sunglasses\", \"scarf\", \"neckwear\"\n"
+    "- outfit styles: \"casual\", \"formal\", \"streetwear\", \"sporty\", \"bohemian\", "
+    "\"business\", \"elegant\", \"vintage\", \"chic\"\n"
+    "- outfit occasions: \"everyday\", \"workwear\", \"party\", \"outdoor\", \"beach\", "
+    "\"formal event\", \"casual outing\"\n"
+    "- scene location: \"indoors\", \"outdoors\", \"studio\"\n"
+    "- scene environment: \"office\", \"street\", \"park\", \"home\", \"beach\", \"runway\", \"mall\"\n"
+    "- person gender: \"woman\", \"man\", \"person\" (use \"person\" when ambiguous)\n\n"
     f"Schema:\n{_SCHEMA_DESCRIPTION}"
 )
 
 
+def _resolve_device(device: str) -> str:
+    """Resolve 'auto' to the best available torch device (never disk-offload)."""
+    if device == "auto":
+        if torch.cuda.is_available():
+            return "cuda"
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
+    return device
+
+
 class QueryParser:
     """Parses a free-text query into structured ``FashionMetadata``.
+
+    Loaded 4-bit quantized on CUDA (this model runs alongside FashionCLIP,
+    BGE, and the cross-encoder simultaneously during online retrieval, so
+    keeping its footprint small matters on small-VRAM GPUs).
 
     Args:
         config: ``QueryParserConfig`` from ``models.yaml``.
     """
 
     def __init__(self, config: QueryParserConfig) -> None:
-        device_map: str = config.device
-        logger.info(
-            "Loading QueryParser '%s' (device_map=%s)…",
-            config.model_name,
-            device_map,
-        )
+        device = _resolve_device(config.device)
+        logger.info("Loading QueryParser '%s' on device='%s'…", config.model_name, device)
+
         self._tokenizer = AutoTokenizer.from_pretrained(config.model_name)
-        self._model = AutoModelForCausalLM.from_pretrained(
-            config.model_name,
-            torch_dtype="auto",
-            device_map=device_map,
-        )
+
+        load_kwargs: dict = {"low_cpu_mem_usage": True}
+        if device == "cuda":
+            try:
+                from transformers import BitsAndBytesConfig
+
+                load_kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_use_double_quant=True,
+                )
+                load_kwargs["device_map"] = {"": 0}
+            except ImportError:
+                logger.warning("bitsandbytes not installed — loading QueryParser in fp16 on CUDA.")
+                load_kwargs["torch_dtype"] = torch.float16
+        else:
+            load_kwargs["torch_dtype"] = torch.float32
+
+        self._model = AutoModelForCausalLM.from_pretrained(config.model_name, **load_kwargs)
+        if "device_map" not in load_kwargs:
+            self._model = self._model.to(device)
         self._model.eval()
         self._max_new_tokens = config.max_new_tokens
         logger.info("QueryParser loaded successfully.")

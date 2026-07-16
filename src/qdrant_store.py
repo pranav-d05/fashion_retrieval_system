@@ -31,17 +31,25 @@ class QdrantStore:
         self._collection = cfg.collection_name
         self._vec_cfg = settings.vectors
 
-        connect_kwargs: dict[str, Any] = {"host": cfg.host, "port": cfg.port}
-        if cfg.api_key:
-            connect_kwargs["api_key"] = cfg.api_key
+        if cfg.local_path:
+            self._client = QdrantClient(path=cfg.local_path)
+            logger.info(
+                "Connected to local Qdrant storage at %s (collection=%s)",
+                cfg.local_path,
+                self._collection,
+            )
+        else:
+            connect_kwargs: dict[str, Any] = {"host": cfg.host, "port": cfg.port}
+            if cfg.api_key:
+                connect_kwargs["api_key"] = cfg.api_key
 
-        self._client = QdrantClient(**connect_kwargs)
-        logger.info(
-            "Connected to Qdrant at %s:%s (collection=%s)",
-            cfg.host,
-            cfg.port,
-            self._collection,
-        )
+            self._client = QdrantClient(**connect_kwargs)
+            logger.info(
+                "Connected to Qdrant at %s:%s (collection=%s)",
+                cfg.host,
+                cfg.port,
+                self._collection,
+            )
 
     # ------------------------------------------------------------------
     # Collection management
@@ -77,6 +85,28 @@ class QdrantStore:
         result = self._client.count(collection_name=self._collection)
         return result.count
 
+    def existing_image_ids(self, image_ids: list[str]) -> set[str]:
+        """Return the subset of ``image_ids`` already present in the collection.
+
+        This is intentionally a single batched lookup so indexing can skip
+        previously stored paths without loading any captioning or embedding
+        models for them.
+        """
+        if not image_ids:
+            return set()
+
+        points = self._client.retrieve(
+            collection_name=self._collection,
+            ids=[_image_id_to_int(image_id) for image_id in image_ids],
+            with_payload=True,
+            with_vectors=False,
+        )
+        return {
+            str(point.payload["image_id"])
+            for point in points
+            if point.payload and point.payload.get("image_id")
+        }
+
     # ------------------------------------------------------------------
     # Upsert
     # ------------------------------------------------------------------
@@ -86,16 +116,20 @@ class QdrantStore:
 
         Each record is stored with:
           - two named vectors (fashionclip + caption)
-          - a payload containing image_path, caption, and full metadata
+          - a payload containing image_path, caption, and structured metadata
         """
         points: list[qmodels.PointStruct] = []
         for rec in records:
+            metadata = rec.metadata.model_dump()
             payload = {
                 "image_id": rec.image_id,
                 "image_path": rec.image_path,
                 "caption": rec.caption,
-                # Store metadata as a nested dict for payload filtering
-                "metadata": rec.metadata.model_dump(),
+                "garments": metadata.get("garments", []),
+                "accessories": metadata.get("accessories", []),
+                "outfit": metadata.get("outfit", {}),
+                "scene": metadata.get("scene", {}),
+                "person": metadata.get("person", {}),
             }
             points.append(
                 qmodels.PointStruct(
@@ -123,80 +157,201 @@ class QdrantStore:
         payload_filter: Optional[qmodels.Filter] = None,
     ) -> list[qmodels.ScoredPoint]:
         """Search a single named vector with optional payload filtering."""
-        return self._client.search(
+        response = self._client.query_points(
             collection_name=self._collection,
-            query_vector=qmodels.NamedVector(name=vector_name, vector=query_vector),
+            query=query_vector,
+            using=vector_name,
             limit=top_k,
             query_filter=payload_filter,
             with_payload=True,
         )
+        return response.points
 
     @staticmethod
     def build_metadata_filter(metadata: FashionMetadata) -> Optional[qmodels.Filter]:
-        """Build a Qdrant payload filter from non-null metadata fields.
+        """Build a Qdrant payload filter from non-null/non-empty metadata fields.
 
-        Only the first garment's category is used to avoid over-filtering.
-        Scene and person fields are also included when present.
+        - String fields use ``MatchValue`` (exact match, lowercased).
+        - List fields (colors, patterns, styles, occasions) use ``MatchAny``
+          so that a query value matches if ANY stored list element equals it.
+        - Each garment / accessory becomes its own ``NestedCondition`` so
+          compound queries like 'red bag and white top' require the image to
+          contain *both* items simultaneously.
         """
         conditions: list[qmodels.Condition] = []
 
-        # Garment category — use NestedCondition to filter any garment in the array.
-        # Qdrant does NOT support array-index notation like "garments[0].category".
-        if metadata.garments:
-            first = metadata.garments[0]
-            if first.category:
-                conditions.append(
-                    qmodels.NestedCondition(
-                        nested=qmodels.Nested(
-                            key="metadata.garments",
-                            filter=qmodels.Filter(
-                                must=[
-                                    qmodels.FieldCondition(
-                                        key="category",
-                                        match=qmodels.MatchValue(
-                                            value=first.category.lower()
-                                        ),
-                                    )
-                                ]
-                            ),
-                        )
+        # --- Garments ---
+        for garment in metadata.garments:
+            inner: list[qmodels.Condition] = []
+
+            if garment.category:
+                inner.append(qmodels.FieldCondition(
+                    key="category",
+                    match=qmodels.MatchValue(value=garment.category.lower()),
+                ))
+            if garment.subcategory:
+                inner.append(qmodels.FieldCondition(
+                    key="subcategory",
+                    match=qmodels.MatchText(text=garment.subcategory.lower()),
+                ))
+            if garment.material:
+                inner.append(qmodels.FieldCondition(
+                    key="material",
+                    match=qmodels.MatchValue(value=garment.material.lower()),
+                ))
+            if garment.fit:
+                inner.append(qmodels.FieldCondition(
+                    key="fit",
+                    match=qmodels.MatchValue(value=garment.fit.lower()),
+                ))
+            if garment.colors:
+                inner.append(qmodels.FieldCondition(
+                    key="colors",
+                    match=qmodels.MatchAny(any=[c.lower() for c in garment.colors]),
+                ))
+            if garment.patterns:
+                inner.append(qmodels.FieldCondition(
+                    key="patterns",
+                    match=qmodels.MatchAny(any=[p.lower() for p in garment.patterns]),
+                ))
+
+            if inner:
+                conditions.append(qmodels.NestedCondition(
+                    nested=qmodels.Nested(
+                        key="garments",
+                        filter=qmodels.Filter(must=inner),
                     )
-                )
+                ))
 
-        # Scene environment
+        # --- Accessories ---
+        for acc in metadata.accessories:
+            inner = []
+
+            if acc.category:
+                inner.append(qmodels.FieldCondition(
+                    key="category",
+                    match=qmodels.MatchValue(value=acc.category.lower()),
+                ))
+            if acc.subcategory:
+                inner.append(qmodels.FieldCondition(
+                    key="subcategory",
+                    match=qmodels.MatchText(text=acc.subcategory.lower()),
+                ))
+            if acc.colors:
+                inner.append(qmodels.FieldCondition(
+                    key="colors",
+                    match=qmodels.MatchAny(any=[c.lower() for c in acc.colors]),
+                ))
+
+            if inner:
+                conditions.append(qmodels.NestedCondition(
+                    nested=qmodels.Nested(
+                        key="accessories",
+                        filter=qmodels.Filter(must=inner),
+                    )
+                ))
+
+        # --- Outfit-level (styles / occasions) ---
+        if metadata.outfit.styles:
+            conditions.append(qmodels.FieldCondition(
+                key="outfit.styles",
+                match=qmodels.MatchAny(any=[s.lower() for s in metadata.outfit.styles]),
+            ))
+        if metadata.outfit.occasions:
+            conditions.append(qmodels.FieldCondition(
+                key="outfit.occasions",
+                match=qmodels.MatchAny(any=[o.lower() for o in metadata.outfit.occasions]),
+            ))
+
+        # --- Scene ---
+        if metadata.scene.location:
+            conditions.append(qmodels.FieldCondition(
+                key="scene.location",
+                match=qmodels.MatchValue(value=metadata.scene.location.lower()),
+            ))
         if metadata.scene.environment:
-            conditions.append(
-                qmodels.FieldCondition(
-                    key="metadata.scene.environment",
-                    match=qmodels.MatchValue(value=metadata.scene.environment.lower()),
-                )
-            )
+            conditions.append(qmodels.FieldCondition(
+                key="scene.environment",
+                match=qmodels.MatchText(text=metadata.scene.environment.lower()),
+            ))
+        if metadata.scene.activity:
+            conditions.append(qmodels.FieldCondition(
+                key="scene.activity",
+                match=qmodels.MatchText(text=metadata.scene.activity.lower()),
+            ))
 
-        # Person gender
+        # --- Person ---
         if metadata.person.gender:
-            conditions.append(
-                qmodels.FieldCondition(
-                    key="metadata.person.gender",
-                    match=qmodels.MatchValue(value=metadata.person.gender.lower()),
-                )
-            )
+            conditions.append(qmodels.FieldCondition(
+                key="person.gender",
+                match=qmodels.MatchValue(value=metadata.person.gender.lower()),
+            ))
+        if metadata.person.num_people is not None:
+            conditions.append(qmodels.FieldCondition(
+                key="person.num_people",
+                match=qmodels.MatchValue(value=metadata.person.num_people),
+            ))
 
-        if not conditions:
-            return None
+        return qmodels.Filter(must=conditions) if conditions else None
 
-        return qmodels.Filter(must=conditions)
+    def lookup_by_image_ids(self, image_ids: list[str]) -> list[RetrievalResult]:
+        """Fetch full retrieval records for the provided image IDs.
+
+        This is the final Qdrant lookup step after reranking so the online
+        pipeline follows the architecture: candidate IDs -> rerank -> lookup.
+        """
+        if not image_ids:
+            return []
+
+        point_ids = [_image_id_to_int(image_id) for image_id in image_ids]
+        points = self._client.retrieve(
+            collection_name=self._collection,
+            ids=point_ids,
+            with_payload=True,
+            with_vectors=False,
+        )
+
+        results = [self._point_to_result(point) for point in points]
+        result_map = {result.image_id: result for result in results}
+        return [result_map[image_id] for image_id in image_ids if image_id in result_map]
 
     @staticmethod
     def scored_point_to_result(point: qmodels.ScoredPoint) -> RetrievalResult:
         """Convert a Qdrant ``ScoredPoint`` into a ``RetrievalResult``."""
         payload = point.payload or {}
-        metadata_dict = payload.get("metadata", {})
+        result = QdrantStore._payload_to_result(payload)
+        result.score = point.score
+        return result
+
+    @staticmethod
+    def _point_to_result(point: Any) -> RetrievalResult:
+        """Convert a Qdrant record or point with payload into ``RetrievalResult``."""
+        payload = getattr(point, "payload", None) or {}
+        return QdrantStore._payload_to_result(payload)
+
+    @staticmethod
+    def _payload_to_result(payload: dict[str, Any]) -> RetrievalResult:
+        metadata = QdrantStore._payload_to_metadata(payload)
         return RetrievalResult(
             image_id=payload.get("image_id", ""),
             image_path=payload.get("image_path", ""),
             caption=payload.get("caption", ""),
-            metadata=FashionMetadata(**metadata_dict),
-            score=point.score,
+            metadata=metadata,
+        )
+
+    @staticmethod
+    def _payload_to_metadata(payload: dict[str, Any]) -> FashionMetadata:
+        """Reconstruct ``FashionMetadata`` from a Qdrant payload dict."""
+        # Legacy support: old payloads stored everything under 'metadata' key
+        if "metadata" in payload and isinstance(payload["metadata"], dict):
+            return FashionMetadata(**payload["metadata"])
+
+        return FashionMetadata(
+            garments=payload.get("garments", []),
+            accessories=payload.get("accessories", []),
+            outfit=payload.get("outfit", {}),
+            scene=payload.get("scene", {}),
+            person=payload.get("person", {}),
         )
 
 

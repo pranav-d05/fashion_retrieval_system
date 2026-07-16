@@ -29,24 +29,22 @@ class TestGarment:
     def test_all_none_by_default(self):
         g = Garment()
         assert g.category is None
-        assert g.color is None
+        assert g.colors == []
 
     def test_full_construction(self):
         g = Garment(
             category="top",
             subcategory="crew-neck t-shirt",
-            color="white",
-            pattern="solid",
+            colors=["white"],
+            patterns=["solid"],
             material="cotton",
             fit="relaxed",
-            style="casual",
-            occasion="everyday",
         )
         assert g.category == "top"
-        assert g.occasion == "everyday"
+        assert g.material == "cotton"
 
     def test_json_round_trip(self):
-        g = Garment(category="dress", color="red")
+        g = Garment(category="dress", colors=["red"])
         data = g.model_dump()
         g2 = Garment(**data)
         assert g == g2
@@ -87,8 +85,8 @@ class TestFashionMetadata:
     def test_multiple_garments(self):
         m = FashionMetadata(
             garments=[
-                Garment(category="top", color="white"),
-                Garment(category="bottom", color="blue"),
+                Garment(category="top", colors=["white"]),
+                Garment(category="bottom", colors=["blue"]),
             ]
         )
         assert len(m.garments) == 2
@@ -97,7 +95,7 @@ class TestFashionMetadata:
 
     def test_full_construction(self):
         m = FashionMetadata(
-            garments=[Garment(category="dress", color="floral")],
+            garments=[Garment(category="dress", colors=["floral"])],
             scene=SceneInfo(location="outdoors", environment="garden"),
             person=PersonInfo(gender="woman", num_people=1),
         )
@@ -106,7 +104,7 @@ class TestFashionMetadata:
 
     def test_json_round_trip(self):
         m = FashionMetadata(
-            garments=[Garment(category="jacket", color="black")],
+            garments=[Garment(category="jacket", colors=["black"])],
             scene=SceneInfo(environment="urban"),
             person=PersonInfo(gender="man"),
         )
@@ -117,12 +115,12 @@ class TestFashionMetadata:
     def test_from_dict(self):
         """Simulate what VLM output parsing does."""
         data = {
-            "garments": [{"category": "top", "color": "navy"}],
+            "garments": [{"category": "top", "colors": ["navy"]}],
             "scene": {"location": "indoors"},
             "person": {"gender": "woman", "num_people": 1},
         }
         m = FashionMetadata(**data)
-        assert m.garments[0].color == "navy"
+        assert m.garments[0].colors == ["navy"]
 
 
 class TestIndexedImage:

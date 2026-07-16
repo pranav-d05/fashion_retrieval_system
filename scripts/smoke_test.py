@@ -17,7 +17,7 @@ def test_schemas():
         RetrievalResult, SceneInfo, PersonInfo
     )
     m = FashionMetadata(
-        garments=[Garment(category="dress", color="red")],
+        garments=[Garment(category="dress", colors=["red"])],
         scene=SceneInfo(environment="beach"),
         person=PersonInfo(gender="woman", num_people=1),
     )

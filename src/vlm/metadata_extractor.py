@@ -18,6 +18,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from src.schemas import FashionMetadata
 from src.utils.config_loader import QueryParserConfig
+from src.vocab import normalize_metadata_vocab
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +176,10 @@ class MetadataExtractor:
 
         new_tokens = output_ids[:, inputs["input_ids"].shape[-1]:]
         raw_outputs = self._tokenizer.batch_decode(new_tokens, skip_special_tokens=True)
-        return [_parse_metadata(raw) for raw in raw_outputs]
+        # Normalize category/colour/scene/gender to the canonical vocabulary
+        # so stored payload values line up with what the (separately
+        # normalized) online query parser produces — see src/vocab.py.
+        return [normalize_metadata_vocab(_parse_metadata(raw)) for raw in raw_outputs]
 
 
 # ---------------------------------------------------------------------------

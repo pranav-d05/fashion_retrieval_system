@@ -1,0 +1,32 @@
+[
+  {
+    "label": "Attribute Specific",
+    "query": "A runway model wearing a black hooded coat over a red top and a black skirt.",
+    "relevant_image_ids": ["IMG_5e281fad2efb1c68"],
+    "rationale": "Tests colour and garment attributes that are present in the catalog."
+  },
+  {
+    "label": "Contextual/Place",
+    "query": "A woman in a beige short-sleeve jacket with light-blue trim and a pale yellow knee-length skirt walking on a fashion-show runway.",
+    "relevant_image_ids": ["IMG_a2d88e92a4f63d31"],
+    "rationale": "Tests clothing together with the dominant catalog context: a runway show."
+  },
+  {
+    "label": "Complex Semantic",
+    "query": "A woman in a fitted brown one-shoulder dress standing outdoors beside a black metal fence.",
+    "relevant_image_ids": ["IMG_a2f135b085a4baea"],
+    "rationale": "Tests the combination of garment shape, colour, pose, and outdoor context."
+  },
+  {
+    "label": "Style Inference",
+    "query": "A casual edgy runway outfit with a sheer beige sleeveless top and flared blue jeans.",
+    "relevant_image_ids": ["IMG_e36ea53104fddd95"],
+    "rationale": "Tests style language alongside multiple fashion attributes."
+  },
+  {
+    "label": "Compositional",
+    "query": "A white lace long-sleeve top layered under a blue patterned blouse, with blue plaid pants and a brown beret.",
+    "relevant_image_ids": ["IMG_a53332df52ff8f4a"],
+    "rationale": "Tests attribute binding across layered garments, trousers, and an accessory."
+  }
+]

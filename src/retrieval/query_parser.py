@@ -4,6 +4,15 @@ Query Parser — converts a free-text user query into structured FashionMetadata
 Uses a lightweight instruction-tuned LLM (Qwen2.5-1.5B-Instruct) with a
 JSON-constrained prompt. Falls back to empty metadata on any parse failure
 so that the retrieval pipeline degrades gracefully to pure vector search.
+
+The schema requested here is deliberately smaller than the offline
+metadata-extraction schema (see vlm/metadata_extractor.py): it only asks
+for the fields that ``QdrantStore.build_metadata_filter`` actually hard-
+filters on (garment/accessory category + colour, scene, gender). Material,
+fit, length, neckline, subcategory, and inferred style/occasion are
+open-vocabulary and are never hard-filtered, so asking the parser to guess
+at them for every query only adds hallucination surface and latency for
+no downstream benefit.
 """
 
 from __future__ import annotations
@@ -17,43 +26,33 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from src.schemas import FashionMetadata
 from src.utils.config_loader import QueryParserConfig
+from src.vocab import normalize_metadata_vocab
 
 logger = logging.getLogger(__name__)
 
-# Schema description injected into the LLM system prompt
+# Schema description injected into the LLM system prompt. Trimmed to the
+# fields that are actually hard-filtered — see module docstring.
 _SCHEMA_DESCRIPTION = """
 {
   "garments": [
     {
       "category": "string | null",
-      "subcategory": "string | null",
-      "colors": ["string"],
-      "patterns": ["string"],
-      "material": "string | null",
-      "fit": "string | null",
-      "length": "string | null",
-      "neckline": "string | null"
+      "colors": ["string"]
     }
   ],
   "accessories": [
     {
       "category": "string | null",
-      "subcategory": "string | null",
       "colors": ["string"]
     }
   ],
-  "outfit": {
-    "styles": ["string"],
-    "occasions": ["string"]
-  },
   "scene": {
     "location": "string | null",
     "environment": "string | null",
     "activity": "string | null"
   },
   "person": {
-    "gender": "string | null",
-    "num_people": "integer | null"
+    "gender": "string | null"
   }
 }
 """.strip()
@@ -63,23 +62,42 @@ _SYSTEM_PROMPT = (
     "Given a user's natural language search query, extract structured fashion "
     "attributes and return ONLY a valid JSON object matching the schema below.\n\n"
     "STRICT RULES:\n"
-    "1. Use null for single-value string fields not mentioned. "
+    "1. Use null for single-value string fields not mentioned or not certain. "
     "   Use [] (empty array) for list fields not mentioned.\n"
-    "2. colors and patterns MUST always be JSON arrays: e.g. [\"navy\", \"white\"].\n"
-    "3. styles and occasions MUST always be JSON arrays: e.g. [\"casual\", \"streetwear\"].\n"
-    "4. garments = clothing items (tops, bottoms, dresses, outerwear, skirts, jumpsuits). "
-    "   accessories = non-clothing items (bags, shoes, jewellery, hats, belts, watches, sunglasses, scarves, ties).\n"
-    "5. Return ONLY the JSON object — no markdown, no explanation, no extra text.\n\n"
-    "CANONICAL VOCABULARY — use these exact values where applicable:\n"
+    "2. colors MUST always be a JSON array, e.g. [\"navy\", \"white\"]. If no colour "
+    "   is mentioned, use [].\n"
+    "3. garments = clothing items (tops, bottoms, dresses, outerwear, skirts, jumpsuits). "
+    "   accessories = non-clothing items (bags, shoes, jewellery, hats, belts, watches, "
+    "   sunglasses, scarves, ties).\n"
+    "4. A garment feature (hood, collar, sleeve, pocket, zip) is NOT a separate accessory. "
+    "   'hooded coat' is ONE garment (category=outerwear) — do not also emit a "
+    "   hat/headwear accessory for the hood.\n"
+    "5. category and colors MUST use only the canonical values listed below. If the "
+    "   query implies something close but not listed, pick the closest canonical value "
+    "   rather than inventing a new one. If nothing fits, use null.\n"
+    "6. Return ONLY the JSON object — no markdown, no explanation, no extra text.\n\n"
+    "CANONICAL VOCABULARY — use these exact values, nothing else:\n"
     "- garment category: \"top\", \"bottom\", \"dress\", \"outerwear\", \"skirt\", \"jumpsuit\"\n"
-    "- accessory category: \"bag\", \"shoes\", \"hat\", \"jewellery\", \"belt\", \"watch\", \"sunglasses\", \"scarf\", \"neckwear\"\n"
-    "- outfit styles: \"casual\", \"formal\", \"streetwear\", \"sporty\", \"bohemian\", "
-    "\"business\", \"elegant\", \"vintage\", \"chic\"\n"
-    "- outfit occasions: \"everyday\", \"workwear\", \"party\", \"outdoor\", \"beach\", "
-    "\"formal event\", \"casual outing\"\n"
+    "- accessory category: \"bag\", \"shoes\", \"hat\", \"jewellery\", \"belt\", \"watch\", "
+    "\"sunglasses\", \"scarf\", \"neckwear\"\n"
+    "- colour: \"black\", \"white\", \"grey\", \"red\", \"orange\", \"yellow\", \"green\", "
+    "\"blue\", \"navy\", \"purple\", \"pink\", \"brown\", \"beige\", \"tan\", \"cream\", "
+    "\"gold\", \"silver\", \"multicolor\"\n"
     "- scene location: \"indoors\", \"outdoors\", \"studio\"\n"
-    "- scene environment: \"office\", \"street\", \"park\", \"home\", \"beach\", \"runway\", \"mall\"\n"
+    "- scene environment: \"office\", \"street\", \"park\", \"home\", \"beach\", \"runway\", "
+    "\"mall\", \"urban\"\n"
+    "- scene activity: \"walking\", \"posing\", \"sitting\", \"standing\"\n"
     "- person gender: \"woman\", \"man\", \"person\" (use \"person\" when ambiguous)\n\n"
+    "EXAMPLES:\n"
+    "Query: black hooded coat\n"
+    "{\"garments\": [{\"category\": \"outerwear\", \"colors\": [\"black\"]}], "
+    "\"accessories\": [], \"scene\": {\"location\": null, \"environment\": null, "
+    "\"activity\": null}, \"person\": {\"gender\": null}}\n\n"
+    "Query: woman in a red dress walking on the street\n"
+    "{\"garments\": [{\"category\": \"dress\", \"colors\": [\"red\"]}], "
+    "\"accessories\": [], \"scene\": {\"location\": \"outdoors\", "
+    "\"environment\": \"street\", \"activity\": \"walking\"}, "
+    "\"person\": {\"gender\": \"woman\"}}\n\n"
     f"Schema:\n{_SCHEMA_DESCRIPTION}"
 )
 
@@ -148,7 +166,11 @@ class QueryParser:
             query: User's search query string.
 
         Returns:
-            ``FashionMetadata`` with extracted attributes.
+            ``FashionMetadata`` with extracted attributes. Category/colour/
+            scene/gender values are validated against the canonical
+            vocabulary (src/vocab.py) before being returned, so anything
+            the model hallucinated outside that vocabulary is dropped
+            rather than passed through to the Qdrant filter.
             Returns empty metadata if parsing fails.
         """
         messages = [
@@ -177,6 +199,7 @@ class QueryParser:
 
         logger.debug("QueryParser raw output: %.150s", raw)
         metadata = _parse_metadata(raw)
+        metadata = normalize_metadata_vocab(metadata)
         return _normalize_metadata_for_query(query, metadata)
 
 
@@ -214,9 +237,10 @@ def _strip_code_fences(text: str) -> str:
 def _normalize_metadata_for_query(query: str, metadata: FashionMetadata) -> FashionMetadata:
     """Apply small deterministic fixes for common query phrases.
 
-    The LLM parser is good at broad extraction but can produce values that are
-    syntactically valid and still too strict for retrieval. This post-pass keeps
-    common fashion search phrases aligned with the indexed metadata vocabulary.
+    These only touch fields that are actually hard-filtered (scene.*).
+    Outfit styles/occasions are no longer part of the query-time schema
+    and are never filtered on (see src/vocab.py + qdrant_store.py), so
+    they're not set here either — doing so would be dead code.
     """
     normalized_query = query.lower()
 
@@ -230,12 +254,6 @@ def _normalize_metadata_for_query(query: str, metadata: FashionMetadata) -> Fash
 
     if "indoor" in normalized_query and metadata.scene.location == "indoor":
         metadata.scene.location = "indoors"
-
-    if "weekend" in normalized_query and not metadata.outfit.occasions:
-        metadata.outfit.occasions = ["casual outing"]
-
-    if "casual" in normalized_query and "casual" not in metadata.outfit.styles:
-        metadata.outfit.styles.append("casual")
 
     if "walk" in normalized_query and not metadata.scene.activity:
         metadata.scene.activity = "walking"

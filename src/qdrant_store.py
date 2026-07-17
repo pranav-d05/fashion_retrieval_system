@@ -169,14 +169,29 @@ class QdrantStore:
 
     @staticmethod
     def build_metadata_filter(metadata: FashionMetadata) -> Optional[qmodels.Filter]:
-        """Build a Qdrant payload filter from non-null/non-empty metadata fields.
+        """Build a Qdrant payload filter from the *reliable* subset of
+        parsed query metadata: garment/accessory category + colour, and
+        scene (location/environment/activity + person.gender).
 
-        - String fields use ``MatchValue`` (exact match, lowercased).
-        - List fields (colors, patterns, styles, occasions) use ``MatchAny``
-          so that a query value matches if ANY stored list element equals it.
-        - Each garment / accessory becomes its own ``NestedCondition`` so
-          compound queries like 'red bag and white top' require the image to
-          contain *both* items simultaneously.
+        Material, fit, length, neckline, subcategory, and inferred
+        style/occasion are intentionally excluded from the filter. They are
+        open-vocabulary fields the query parser is not reliable on, and
+        hard-filtering on them previously drove near-total fallback to
+        unfiltered search (see retriever._search_with_fallback) — a single
+        wrong or hallucinated field anywhere zeroed out the whole result
+        set. They're still fully present in the stored payload and in the
+        caption text, so FashionCLIP/BGE similarity and the cross-encoder
+        reranker still benefit from them; they're just not used to gate
+        candidates in/out here.
+
+        By the time a value reaches this function it's expected to already
+        be validated against the canonical vocabulary (see
+        ``src.vocab.normalize_metadata_vocab``, applied by both the query
+        parser and the offline metadata extractor), so the remaining
+        conditions are trustworthy enough to combine with ``min_should``
+        rather than ``must``: most (not necessarily all) of them need to
+        match, so one residual bad field doesn't zero out the candidate
+        pool the way a strict AND across everything used to.
         """
         conditions: list[qmodels.Condition] = []
 
@@ -189,30 +204,10 @@ class QdrantStore:
                     key="category",
                     match=qmodels.MatchValue(value=garment.category.lower()),
                 ))
-            if garment.subcategory:
-                inner.append(qmodels.FieldCondition(
-                    key="subcategory",
-                    match=qmodels.MatchText(text=garment.subcategory.lower()),
-                ))
-            if garment.material:
-                inner.append(qmodels.FieldCondition(
-                    key="material",
-                    match=qmodels.MatchValue(value=garment.material.lower()),
-                ))
-            if garment.fit:
-                inner.append(qmodels.FieldCondition(
-                    key="fit",
-                    match=qmodels.MatchValue(value=garment.fit.lower()),
-                ))
             if garment.colors:
                 inner.append(qmodels.FieldCondition(
                     key="colors",
                     match=qmodels.MatchAny(any=[c.lower() for c in garment.colors]),
-                ))
-            if garment.patterns:
-                inner.append(qmodels.FieldCondition(
-                    key="patterns",
-                    match=qmodels.MatchAny(any=[p.lower() for p in garment.patterns]),
                 ))
 
             if inner:
@@ -232,11 +227,6 @@ class QdrantStore:
                     key="category",
                     match=qmodels.MatchValue(value=acc.category.lower()),
                 ))
-            if acc.subcategory:
-                inner.append(qmodels.FieldCondition(
-                    key="subcategory",
-                    match=qmodels.MatchText(text=acc.subcategory.lower()),
-                ))
             if acc.colors:
                 inner.append(qmodels.FieldCondition(
                     key="colors",
@@ -251,18 +241,6 @@ class QdrantStore:
                     )
                 ))
 
-        # --- Outfit-level (styles / occasions) ---
-        if metadata.outfit.styles:
-            conditions.append(qmodels.FieldCondition(
-                key="outfit.styles",
-                match=qmodels.MatchAny(any=[s.lower() for s in metadata.outfit.styles]),
-            ))
-        if metadata.outfit.occasions:
-            conditions.append(qmodels.FieldCondition(
-                key="outfit.occasions",
-                match=qmodels.MatchAny(any=[o.lower() for o in metadata.outfit.occasions]),
-            ))
-
         # --- Scene ---
         if metadata.scene.location:
             conditions.append(qmodels.FieldCondition(
@@ -272,12 +250,12 @@ class QdrantStore:
         if metadata.scene.environment:
             conditions.append(qmodels.FieldCondition(
                 key="scene.environment",
-                match=qmodels.MatchText(text=metadata.scene.environment.lower()),
+                match=qmodels.MatchValue(value=metadata.scene.environment.lower()),
             ))
         if metadata.scene.activity:
             conditions.append(qmodels.FieldCondition(
                 key="scene.activity",
-                match=qmodels.MatchText(text=metadata.scene.activity.lower()),
+                match=qmodels.MatchValue(value=metadata.scene.activity.lower()),
             ))
 
         # --- Person ---
@@ -286,13 +264,18 @@ class QdrantStore:
                 key="person.gender",
                 match=qmodels.MatchValue(value=metadata.person.gender.lower()),
             ))
-        if metadata.person.num_people is not None:
-            conditions.append(qmodels.FieldCondition(
-                key="person.num_people",
-                match=qmodels.MatchValue(value=metadata.person.num_people),
-            ))
 
-        return qmodels.Filter(must=conditions) if conditions else None
+        if not conditions:
+            return None
+
+        # Few reliable signals (1-2): require all of them — there's no slack
+        # to spare without losing precision. 3+: allow exactly one miss, so
+        # a single residual bad field doesn't zero out the candidate pool.
+        min_count = len(conditions) if len(conditions) <= 2 else len(conditions) - 1
+
+        return qmodels.Filter(
+            min_should=qmodels.MinShould(conditions=conditions, min_count=min_count)
+        )
 
     def lookup_by_image_ids(self, image_ids: list[str]) -> list[RetrievalResult]:
         """Fetch full retrieval records for the provided image IDs.

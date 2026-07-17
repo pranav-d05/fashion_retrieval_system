@@ -2,8 +2,14 @@
 Unit tests for ``QdrantStore.build_metadata_filter``.
 
 These test the pure filter-construction logic (no live Qdrant connection
-required). They specifically guard against the compositional-query
-regression where only the first garment's category was filtered on.
+required). They guard against two historical regressions:
+
+1. Compositional queries only constraining the first garment's category.
+2. Every parsed condition being AND-ed together (``must``), which meant a
+   single wrong/unreliable field (material, fit, subcategory, ...) zeroed
+   out the whole result set. The filter now only considers the reliable
+   fields (category, colour, scene, gender) and combines them with
+   ``min_should`` so most — not necessarily all — need to match.
 """
 
 from __future__ import annotations
@@ -11,11 +17,18 @@ from __future__ import annotations
 from qdrant_client.http import models as qmodels
 
 from src.qdrant_store import QdrantStore
-from src.schemas import FashionMetadata, Garment, PersonInfo, SceneInfo
+from src.schemas import Accessory, FashionMetadata, Garment, PersonInfo, SceneInfo
+
+
+def _conditions(filt: qmodels.Filter) -> list:
+    """Pull the condition list out of the min_should wrapper."""
+    assert filt.must is None, "conditions should be combined with min_should, not must"
+    assert filt.min_should is not None
+    return filt.min_should.conditions
 
 
 def _nested_conditions(filt: qmodels.Filter) -> list[qmodels.NestedCondition]:
-    return [c for c in filt.must if isinstance(c, qmodels.NestedCondition)]
+    return [c for c in _conditions(filt) if isinstance(c, qmodels.NestedCondition)]
 
 
 def _extract_keys(must_list: list[qmodels.FieldCondition]) -> dict:
@@ -90,44 +103,95 @@ class TestBuildMetadataFilter:
         inner_keys = _extract_keys(nested[0].nested.filter.must)
         assert inner_keys == {"colors": ["blue"]}
 
-    def test_scene_and_person_conditions_included(self):
+    def test_unreliable_fields_are_never_filtered(self):
+        """material/fit/length/neckline/subcategory/patterns/styles/
+        occasions/num_people must never reach the Qdrant filter, even if
+        present on the parsed metadata (e.g. from a caller that skipped
+        normalize_metadata_vocab)."""
+        metadata = FashionMetadata(
+            garments=[
+                Garment(
+                    category="outerwear",
+                    subcategory="hooded coat",
+                    colors=["black"],
+                    patterns=["plain"],
+                    material="wool",
+                    fit="oversized",
+                    length="knee-length",
+                    neckline="collar",
+                )
+            ],
+            person=PersonInfo(gender="woman", num_people=2),
+        )
+        filt = QdrantStore.build_metadata_filter(metadata)
+        nested = _nested_conditions(filt)
+        inner_keys = _extract_keys(nested[0].nested.filter.must)
+        assert inner_keys == {"category": "outerwear", "colors": ["black"]}
+
+        field_conditions = [
+            c for c in _conditions(filt) if isinstance(c, qmodels.FieldCondition)
+        ]
+        keys_present = {c.key for c in field_conditions}
+        assert keys_present == {"person.gender"}  # num_people is not filtered
+
+    def test_accessory_only_uses_category_and_colors(self):
+        metadata = FashionMetadata(
+            accessories=[Accessory(category="bag", subcategory="tote bag", colors=["brown"])]
+        )
+        filt = QdrantStore.build_metadata_filter(metadata)
+        nested = _nested_conditions(filt)
+        inner_keys = _extract_keys(nested[0].nested.filter.must)
+        assert inner_keys == {"category": "bag", "colors": ["brown"]}
+
+    def test_scene_and_gender_conditions_included(self):
         metadata = FashionMetadata(
             scene=SceneInfo(location="indoors", environment="office", activity="posing"),
             person=PersonInfo(gender="woman", num_people=1),
         )
         filt = QdrantStore.build_metadata_filter(metadata)
         field_conditions = [
-            c for c in filt.must if isinstance(c, qmodels.FieldCondition)
+            c for c in _conditions(filt) if isinstance(c, qmodels.FieldCondition)
         ]
-        keys = {}
-        for c in field_conditions:
-            if isinstance(c.match, qmodels.MatchValue):
-                keys[c.key] = c.match.value
-            elif isinstance(c.match, qmodels.MatchText):
-                keys[c.key] = c.match.text
-            elif hasattr(c.match, "any") and c.match.any is not None:
-                keys[c.key] = c.match.any
+        keys = _extract_keys(field_conditions)
         assert keys == {
             "scene.location": "indoors",
             "scene.environment": "office",
             "scene.activity": "posing",
             "person.gender": "woman",
-            "person.num_people": 1,
         }
 
     def test_values_are_lowercased(self):
         metadata = FashionMetadata(garments=[Garment(category="Shirt", colors=["Red"])])
         filt = QdrantStore.build_metadata_filter(metadata)
         nested = _nested_conditions(filt)
-        
+
         inner_values = set()
         for c in nested[0].nested.filter.must:
             if isinstance(c.match, qmodels.MatchValue):
                 inner_values.add(c.match.value)
             elif hasattr(c.match, "any") and c.match.any is not None:
                 inner_values.update(c.match.any)
-                
+
         assert inner_values == {"shirt", "red"}
+
+    def test_min_count_requires_all_when_two_or_fewer_conditions(self):
+        metadata = FashionMetadata(
+            garments=[Garment(category="dress", colors=["red"])]
+        )
+        filt = QdrantStore.build_metadata_filter(metadata)
+        # one nested condition (garment) -> min_count == 1 == total conditions
+        assert filt.min_should.min_count == len(filt.min_should.conditions) == 1
+
+    def test_min_count_allows_one_miss_with_three_or_more_conditions(self):
+        metadata = FashionMetadata(
+            garments=[Garment(category="dress", colors=["red"])],
+            accessories=[Accessory(category="bag", colors=["black"])],
+            scene=SceneInfo(location="outdoors"),
+        )
+        filt = QdrantStore.build_metadata_filter(metadata)
+        total = len(filt.min_should.conditions)
+        assert total == 3
+        assert filt.min_should.min_count == total - 1
 
     def test_flat_payload_round_trips_to_metadata(self):
         payload = {

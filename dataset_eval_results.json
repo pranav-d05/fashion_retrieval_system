@@ -1,0 +1,1746 @@
+{
+  "summary": {
+    "query_file": "configs/evaluation_queries.json",
+    "num_queries": 5,
+    "hit_at_5": 0.8,
+    "mrr": 0.8
+  },
+  "queries": [
+    {
+      "label": "Attribute Specific",
+      "query": "A runway model wearing a black hooded coat over a red top and a black skirt.",
+      "rationale": "Tests colour and garment attributes that are present in the catalog.",
+      "relevant_image_ids": [
+        "IMG_5e281fad2efb1c68"
+      ],
+      "relevant_rank": 1,
+      "hit_at_5": true,
+      "parsed_metadata": {
+        "garments": [
+          {
+            "category": "outerwear",
+            "subcategory": null,
+            "colors": [
+              "black"
+            ],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          },
+          {
+            "category": "top",
+            "subcategory": null,
+            "colors": [
+              "red"
+            ],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          },
+          {
+            "category": "bottom",
+            "subcategory": null,
+            "colors": [
+              "black"
+            ],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          }
+        ],
+        "accessories": [],
+        "outfit": {
+          "styles": [],
+          "occasions": []
+        },
+        "scene": {
+          "location": null,
+          "environment": "runway",
+          "activity": "walking"
+        },
+        "person": {
+          "gender": "person",
+          "num_people": null
+        }
+      },
+      "results": [
+        {
+          "rank": 1,
+          "score": 0.9932,
+          "image_id": "IMG_5e281fad2efb1c68",
+          "filename": "00a8764cff12b2e849c850f4be5608bc.jpg",
+          "image_path": "data\\images\\test\\00a8764cff12b2e849c850f4be5608bc.jpg",
+          "caption": "The image shows a model walking down a runway. The model is wearing a black coat with a hood, a red top, a black skirt with a belt, and black tights. The setting appears to be a fashion show, as there are audience members seated in the background. The style is casual yet stylish, suitable for a runway presentation. The occasion is likely a fashion show, given the runway setting and audience presence. The setting is an indoor venue, possibly a fashion show or runway event.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "hooded coat",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [],
+                "material": "unknown",
+                "fit": "unknown",
+                "length": "unknown",
+                "neckline": "unknown"
+              },
+              {
+                "category": "top",
+                "subcategory": "shirt",
+                "colors": [
+                  "red"
+                ],
+                "patterns": [],
+                "material": "unknown",
+                "fit": "unknown",
+                "length": "unknown",
+                "neckline": "unknown"
+              },
+              {
+                "category": "bottom",
+                "subcategory": "skirt",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [],
+                "material": "unknown",
+                "fit": "unknown",
+                "length": "unknown",
+                "neckline": "unknown"
+              },
+              {
+                "category": "bottom",
+                "subcategory": "tights",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [],
+                "material": "unknown",
+                "fit": "unknown",
+                "length": "unknown",
+                "neckline": "unknown"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "unknown",
+                "colors": []
+              },
+              {
+                "category": "shoes",
+                "subcategory": "unknown",
+                "colors": []
+              },
+              {
+                "category": "scarf",
+                "subcategory": "unknown",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "runway"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": "runway",
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 2,
+          "score": 0.9341,
+          "image_id": "IMG_a092badafbc531c1",
+          "filename": "1b93ec2c602538cb06bf66ef2e0042b0.jpg",
+          "image_path": "data\\images\\test\\1b93ec2c602538cb06bf66ef2e0042b0.jpg",
+          "caption": "The image shows a model walking down a runway. The model is wearing a black outfit consisting of a short dress with a deep V-neckline and a hooded jacket. The dress has a ruffled hem and is paired with black tights and black loafers. The setting appears to be a fashion show, indicated by the runway and the audience seated on either side. The style is modern and minimalistic, suitable for a high-fashion event.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "short",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [],
+                "material": "fabric",
+                "fit": "slim",
+                "length": "short",
+                "neckline": "deepv"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "hood",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "modern"
+              ],
+              "occasions": [
+                "high-fashion"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 3,
+          "score": 0.895,
+          "image_id": "IMG_ce478db6a0a4d18c",
+          "filename": "1fd63362ced55967a97a324928583339.jpg",
+          "image_path": "data\\images\\test\\1fd63362ced55967a97a324928583339.jpg",
+          "caption": "The image shows a fashion runway scene with a model walking down the catwalk. The model is wearing a long, multi-colored coat with black, red, blue, and beige sections, paired with white pants and high-heeled shoes. She carries a large, structured handbag. The audience is seated on either side of the runway, attentively watching the show. The setting appears to be a professional fashion show, likely for a high-end designer, given the sophisticated attire and the runway setup.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "coat",
+                "colors": [
+                  "black",
+                  "red",
+                  "blue",
+                  "beige"
+                ],
+                "patterns": [],
+                "material": "polyester",
+                "fit": "long",
+                "length": "full length",
+                "neckline": "not specified"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "bag",
+                "subcategory": "structured",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "formal event"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": "office",
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 4,
+          "score": 0.8647,
+          "image_id": "IMG_3e8b70173173ee9b",
+          "filename": "003d41dd20f271d27219fe7ee6de727d.jpg",
+          "image_path": "data\\images\\test\\003d41dd20f271d27219fe7ee6de727d.jpg",
+          "caption": "The image shows a model walking down a runway at Western Canada Fashion Week. The model is wearing a vibrant, patterned top with long sleeves, featuring a mix of green, blue, yellow, and white colors. The top has a high neckline and a zipper detail. She is also wearing a black skirt with a voluminous, ruffled hem. The setting appears to be a professional runway event, indicated by the backdrop and the presence of an audience.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "top",
+                "subcategory": "vibrant_patterned_top",
+                "colors": [
+                  "green",
+                  "blue",
+                  "yellow",
+                  "white"
+                ],
+                "patterns": [],
+                "material": "unknown",
+                "fit": "unknown",
+                "length": "long_sleeved",
+                "neckline": "high_neckline"
+              },
+              {
+                "category": "bottom",
+                "subcategory": "black_skirt",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [],
+                "material": "unknown",
+                "fit": "voluminous",
+                "length": "ruffled_hem",
+                "neckline": null
+              }
+            ],
+            "accessories": [
+              {
+                "category": null,
+                "subcategory": "none",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "formal_event"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": null
+            },
+            "person": {
+              "gender": null,
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 5,
+          "score": 0.8037,
+          "image_id": "IMG_44f6e4f62b988a4b",
+          "filename": "1ba59c93806cd99aa291db7ac4960424.jpg",
+          "image_path": "data\\images\\test\\1ba59c93806cd99aa291db7ac4960424.jpg",
+          "caption": "The image shows a model walking down a runway. The model is wearing a black dress with a quilted design and sheer panels. The dress has a high neckline and long sleeves. The model is also wearing a black jacket over the dress. The setting appears to be a fashion show, as indicated by the audience seated in rows and the runway. The style of the outfit is modern and stylish, suitable for a fashion event.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "quilted",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [
+                  "sheer panels"
+                ],
+                "material": "fabric",
+                "fit": "not specified",
+                "length": "not specified",
+                "neckline": "high"
+              }
+            ],
+            "accessories": [],
+            "outfit": {
+              "styles": [
+                "modern",
+                "stylish"
+              ],
+              "occasions": [
+                "fashion event"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "label": "Contextual/Place",
+      "query": "A woman in a beige short-sleeve jacket with light-blue trim and a pale yellow knee-length skirt walking on a fashion-show runway.",
+      "rationale": "Tests clothing together with the dominant catalog context: a runway show.",
+      "relevant_image_ids": [
+        "IMG_a2d88e92a4f63d31"
+      ],
+      "relevant_rank": 1,
+      "hit_at_5": true,
+      "parsed_metadata": {
+        "garments": [
+          {
+            "category": "dress",
+            "subcategory": null,
+            "colors": [],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          }
+        ],
+        "accessories": [],
+        "outfit": {
+          "styles": [],
+          "occasions": []
+        },
+        "scene": {
+          "location": null,
+          "environment": null,
+          "activity": "walking"
+        },
+        "person": {
+          "gender": "woman",
+          "num_people": null
+        }
+      },
+      "results": [
+        {
+          "rank": 1,
+          "score": 0.9956,
+          "image_id": "IMG_a2d88e92a4f63d31",
+          "filename": "00a1940434d687a785be0acf2b0fbff3.jpg",
+          "image_path": "data\\images\\test\\00a1940434d687a785be0acf2b0fbff3.jpg",
+          "caption": "The image shows a woman walking down a runway at Western Canada Fashion Week. She is wearing a two-piece outfit consisting of a beige blazer with light blue accents and a matching skirt. The blazer has a buttoned front, short sleeves, and a straight-cut skirt. She is also wearing orange sandals. The setting appears to be a runway show with an audience seated on either side of the catwalk.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "blazer",
+                "colors": [
+                  "beige",
+                  "blue"
+                ],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "straight cut",
+                "length": "full length",
+                "neckline": "buttoned front"
+              },
+              {
+                "category": "bottom",
+                "subcategory": "skirt",
+                "colors": [
+                  "beige"
+                ],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "short sleeves",
+                "length": "full length",
+                "neckline": "none"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "shoes",
+                "subcategory": "sandals",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "runway"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 2,
+          "score": 0.9956,
+          "image_id": "IMG_49a944b60fd7d7cb",
+          "filename": "1c0a1d443043d8797290780b5680d4a4.jpg",
+          "image_path": "data\\images\\test\\1c0a1d443043d8797290780b5680d4a4.jpg",
+          "caption": "The image shows a woman walking down a runway at a fashion show. She is wearing an elegant, off-the-shoulder dress with a textured, beige patterned design. The dress features a fur-like texture on the shoulders and a decorative bow at the waist. She is also wearing high heels. The audience is seated on either side of the runway, and there is a large screen displaying the event in the background. The setting suggests a formal fashion event.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "off-the-shoulder",
+                "colors": [
+                  "beige"
+                ],
+                "patterns": [
+                  "textured"
+                ],
+                "material": "beige",
+                "fit": "flowy",
+                "length": "full-length",
+                "neckline": "off-the-shoulder"
+              }
+            ],
+            "accessories": [],
+            "outfit": {
+              "styles": [
+                "elegant"
+              ],
+              "occasions": [
+                "formal event"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 3,
+          "score": 0.9922,
+          "image_id": "IMG_d676c271add1aca8",
+          "filename": "2cf13e48204a0e45bb0a58cf05b53c06.jpg",
+          "image_path": "data\\images\\test\\2cf13e48204a0e45bb0a58cf05b53c06.jpg",
+          "caption": "The image shows a woman walking down a runway at a fashion show. She is wearing a casual outfit consisting of a white turtleneck sweater with an orange drawstring bag over it, a dark jacket, and black pants. Her footwear includes high-heeled shoes. The setting appears to be a runway event, as indicated by the stage and the backdrop displaying \"the bamboo ballroom\" and \"WCFW.\" The overall style suggests a casual yet stylish look suitable for a fashion show.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "top",
+                "subcategory": "turtleneck",
+                "colors": [
+                  "white"
+                ],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "slim",
+                "length": "long",
+                "neckline": null
+              },
+              {
+                "category": "bottom",
+                "subcategory": "pants",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [],
+                "material": "polyester",
+                "fit": "straight",
+                "length": "full-length",
+                "neckline": null
+              },
+              {
+                "category": "outerwear",
+                "subcategory": "jacket",
+                "colors": [],
+                "patterns": [],
+                "material": "wool",
+                "fit": "unlined",
+                "length": "full-length",
+                "neckline": null
+              },
+              {
+                "category": null,
+                "subcategory": "bag",
+                "colors": [
+                  "orange"
+                ],
+                "patterns": [],
+                "material": null,
+                "fit": null,
+                "length": null,
+                "neckline": null
+              }
+            ],
+            "accessories": [
+              {
+                "category": "bag",
+                "subcategory": "over-the-shoulder",
+                "colors": [
+                  "orange"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "fashion show"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": "runway",
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 4,
+          "score": 0.9922,
+          "image_id": "IMG_925b30971aef60b8",
+          "filename": "3e38c727a70c8c212f4794b0d46fdb01.jpg",
+          "image_path": "data\\images\\test\\3e38c727a70c8c212f4794b0d46fdb01.jpg",
+          "caption": "The image shows a woman walking down a runway. She is wearing a strapless, ruffled dress with an asymmetrical hemline, which is primarily beige with peach accents. The dress has a high slit on one side. She is barefoot and has her hair styled in a bun. She is accessorized with a pearl necklace and a bracelet on her left wrist. The setting appears to be a fashion show, as indicated by the runway and the backdrop displaying the word \"DIVA.\"",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "strapless",
+                "colors": [
+                  "beige",
+                  "orange"
+                ],
+                "patterns": [],
+                "material": "fabric",
+                "fit": "flowy",
+                "length": "long",
+                "neckline": "high"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "neckwear",
+                "subcategory": "pearl necklace",
+                "colors": []
+              },
+              {
+                "category": "hat",
+                "subcategory": "bun",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "diva"
+              ],
+              "occasions": [
+                "fashion show"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 5,
+          "score": 0.9907,
+          "image_id": "IMG_21727c829d9f16d0",
+          "filename": "02f4eb537b152293cf69938553518677.jpg",
+          "image_path": "data\\images\\test\\02f4eb537b152293cf69938553518677.jpg",
+          "caption": "The image shows a woman walking down a runway at a fashion show. She is wearing a strapless, form-fitting dress with a purple and black patterned design. The dress has a fitted silhouette, reaching just above her knees. She is also wearing black tights and black high-heeled boots. Her hair is styled in an updo. In the background, there is a man dressed in a black suit, possibly another model or a runway assistant. The setting appears to be a formal event, likely a fashion show, given the runway, audience, and professional attire.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "strapless",
+                "colors": [
+                  "purple",
+                  "black"
+                ],
+                "patterns": [
+                  "patterned"
+                ],
+                "material": "fabric",
+                "fit": "fitted",
+                "length": "just_above_knees",
+                "neckline": "strapless"
+              }
+            ],
+            "accessories": [],
+            "outfit": {
+              "styles": [
+                "formal"
+              ],
+              "occasions": [
+                "formal event"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "label": "Complex Semantic",
+      "query": "A woman in a fitted brown one-shoulder dress standing outdoors beside a black metal fence.",
+      "rationale": "Tests the combination of garment shape, colour, pose, and outdoor context.",
+      "relevant_image_ids": [
+        "IMG_a2f135b085a4baea"
+      ],
+      "relevant_rank": 1,
+      "hit_at_5": true,
+      "parsed_metadata": {
+        "garments": [
+          {
+            "category": "dress",
+            "subcategory": null,
+            "colors": [
+              "brown"
+            ],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          }
+        ],
+        "accessories": [],
+        "outfit": {
+          "styles": [],
+          "occasions": []
+        },
+        "scene": {
+          "location": "outdoors",
+          "environment": "runway",
+          "activity": "standing"
+        },
+        "person": {
+          "gender": "woman",
+          "num_people": null
+        }
+      },
+      "results": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "image_id": "IMG_a2f135b085a4baea",
+          "filename": "00d5da56c02d426c4e4bf802b1888471.jpg",
+          "image_path": "data\\images\\test\\00d5da56c02d426c4e4bf802b1888471.jpg",
+          "caption": "The image shows a woman wearing a brown one-shoulder dress with a fitted silhouette. She is standing outdoors, leaning against a black metal fence with greenery and a palm tree in the background. The setting appears to be an urban area with grass and a paved path. The woman is wearing high-heeled shoes and has her hair down. The overall style suggests a casual, yet stylish outfit suitable for a relaxed day out.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "one-shoulder",
+                "colors": [
+                  "brown"
+                ],
+                "patterns": [],
+                "material": "fabric",
+                "fit": "fitted",
+                "length": "full-length",
+                "neckline": "one-shoulder"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "shoes",
+                "subcategory": "high-heels",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": "urban",
+              "activity": null
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 2,
+          "score": 0.9521,
+          "image_id": "IMG_ce4e105c9b667868",
+          "filename": "1c65a2e6783d87f86c30495565722fbd.jpg",
+          "image_path": "data\\images\\test\\1c65a2e6783d87f86c30495565722fbd.jpg",
+          "caption": "The image shows a woman wearing a strapless, knee-length dress with a fitted silhouette. The dress is olive green with a black bow detail at the front. She has a brown headband and her hair is tied back. She is holding a small clutch purse in her right hand. The setting appears to be a fashion show, as there are other people in the background, some of whom are seated and others standing, indicating an audience. The overall style suggests a formal or semi-formal event.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "knee-length",
+                "colors": [],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "fitted",
+                "length": "knee-length",
+                "neckline": "strapless"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "none",
+                "colors": []
+              },
+              {
+                "category": "bag",
+                "subcategory": "clutch",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "formal"
+              ],
+              "occasions": [
+                "formal event"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": null
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 3,
+          "score": 0.9058,
+          "image_id": "IMG_76eed0be2a86e174",
+          "filename": "5d9b7b0dfc956f5aa831b426e886143f.jpg",
+          "image_path": "data\\images\\test\\5d9b7b0dfc956f5aa831b426e886143f.jpg",
+          "caption": "The image shows a woman wearing a teal dress with long sleeves and a fitted silhouette. The dress has a hood and appears to be made of a soft, stretchy material. She is also wearing beige high-heeled shoes. The setting is an outdoor area with a stone wall in the background. The overall style suggests a casual, everyday look.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "long-sleeve",
+                "colors": [
+                  "blue"
+                ],
+                "patterns": [],
+                "material": "soft stretchy",
+                "fit": "fitted",
+                "length": "long",
+                "neckline": null
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "hooded",
+                "colors": []
+              },
+              {
+                "category": "shoes",
+                "subcategory": "high-heels",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": "outdoors",
+              "environment": "street",
+              "activity": null
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 4,
+          "score": 0.8428,
+          "image_id": "IMG_e21e3691668fd0d1",
+          "filename": "4e872a7fcd5c125164305d750c8688b6.jpg",
+          "image_path": "data\\images\\test\\4e872a7fcd5c125164305d750c8688b6.jpg",
+          "caption": "The image shows a woman wearing a floral-patterned dress with a one-shoulder design. The dress features a mix of bright colors including yellow, orange, pink, and green, creating a vibrant and cheerful look. She has long, dark hair and is accessorized with colorful bracelets on both wrists. The setting appears to be outdoors, possibly in a park or forest, with lush greenery in the background. The overall style suggests a casual, summery vibe suitable for a relaxed day out.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "one-shoulder",
+                "colors": [
+                  "yellow",
+                  "orange",
+                  "pink",
+                  "green"
+                ],
+                "patterns": [
+                  "floral"
+                ],
+                "material": "fabric",
+                "fit": "flowy",
+                "length": "long",
+                "neckline": null
+              }
+            ],
+            "accessories": [
+              {
+                "category": "jewellery",
+                "subcategory": "colorful",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "summer"
+              ]
+            },
+            "scene": {
+              "location": "outdoors",
+              "environment": null,
+              "activity": null
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 5,
+          "score": 0.8384,
+          "image_id": "IMG_084205e637650128",
+          "filename": "4dfdd566c7812856c57366d6f7ddf19b.jpg",
+          "image_path": "data\\images\\test\\4dfdd566c7812856c57366d6f7ddf19b.jpg",
+          "caption": "The image shows a woman standing outdoors. She is wearing a white lace crop top and a plaid skirt with a brown waistband. She has on white platform heels and a bracelet on her right wrist. The setting appears to be an urban environment with modern architecture and construction materials in the background. The attire suggests a casual, stylish look suitable for everyday wear.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "crop top",
+                "colors": [
+                  "white"
+                ],
+                "patterns": [
+                  "plaid"
+                ],
+                "material": "lace",
+                "fit": "loose",
+                "length": "short",
+                "neckline": null
+              },
+              {
+                "category": "bottom",
+                "subcategory": "skirt",
+                "colors": [
+                  "brown"
+                ],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "loose",
+                "length": "full",
+                "neckline": null
+              }
+            ],
+            "accessories": [
+              {
+                "category": "jewellery",
+                "subcategory": "none",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": "outdoors",
+              "environment": "urban",
+              "activity": "standing"
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "label": "Style Inference",
+      "query": "A casual edgy runway outfit with a sheer beige sleeveless top and flared blue jeans.",
+      "rationale": "Tests style language alongside multiple fashion attributes.",
+      "relevant_image_ids": [
+        "IMG_e36ea53104fddd95"
+      ],
+      "relevant_rank": null,
+      "hit_at_5": false,
+      "parsed_metadata": {
+        "garments": [
+          {
+            "category": "top",
+            "subcategory": null,
+            "colors": [
+              "beige"
+            ],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          },
+          {
+            "category": null,
+            "subcategory": null,
+            "colors": [
+              "blue"
+            ],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          }
+        ],
+        "accessories": [],
+        "outfit": {
+          "styles": [],
+          "occasions": []
+        },
+        "scene": {
+          "location": null,
+          "environment": null,
+          "activity": "walking"
+        },
+        "person": {
+          "gender": "person",
+          "num_people": null
+        }
+      },
+      "results": [
+        {
+          "rank": 1,
+          "score": 0.0765,
+          "image_id": "IMG_aa0df1c1f5f10606",
+          "filename": "4f2a2c16e1c284c1dc11cb987c9f5ca0.jpg",
+          "image_path": "data\\images\\test\\4f2a2c16e1c284c1dc11cb987c9f5ca0.jpg",
+          "caption": "The image shows a person wearing a blue denim shirt dress with rolled-up sleeves, orange sneakers, and a striped tote bag. The setting appears to be an urban environment with tall buildings and a body of water in the background, suggesting a cityscape. The outfit is casual and stylish, suitable for everyday wear.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "shirt",
+                "colors": [
+                  "blue"
+                ],
+                "patterns": [
+                  "striped"
+                ],
+                "material": "denim",
+                "fit": "rolled-up",
+                "length": "full",
+                "neckline": null
+              }
+            ],
+            "accessories": [
+              {
+                "category": "bag",
+                "subcategory": "tote",
+                "colors": [
+                  "orange"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 2,
+          "score": 0.0388,
+          "image_id": "IMG_2875659235c85f7a",
+          "filename": "3acc1889145c21ce16758b5a0251bd7e.jpg",
+          "image_path": "data\\images\\test\\3acc1889145c21ce16758b5a0251bd7e.jpg",
+          "caption": "The image shows a person wearing a black puffer jacket with a fur-lined hood, blue jeans, black boots, red gloves, and a red beanie hat. The person is carrying a red handbag. The setting appears to be outdoors, possibly in a historical or archaeological site, as indicated by the stone steps and ancient ruins in the background. The attire suggests a casual, possibly winter or autumn day.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "hooded coat",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [
+                  "fur"
+                ],
+                "material": "puffer",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              },
+              {
+                "category": null,
+                "subcategory": "jeans",
+                "colors": [
+                  "blue"
+                ],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              },
+              {
+                "category": null,
+                "subcategory": "boots",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [],
+                "material": "leather",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              },
+              {
+                "category": null,
+                "subcategory": "gloves",
+                "colors": [
+                  "red"
+                ],
+                "patterns": [],
+                "material": "wool",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              },
+              {
+                "category": null,
+                "subcategory": "hat",
+                "colors": [
+                  "red"
+                ],
+                "patterns": [],
+                "material": "unknown",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "bag",
+                "subcategory": "handbag",
+                "colors": [
+                  "red"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "outdoor"
+              ]
+            },
+            "scene": {
+              "location": "outdoors",
+              "environment": null,
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 3,
+          "score": 0.0371,
+          "image_id": "IMG_313cc2d8c98e25ae",
+          "filename": "2dfddd4c026c5dfbcf2556557e6290cc.jpg",
+          "image_path": "data\\images\\test\\2dfddd4c026c5dfbcf2556557e6290cc.jpg",
+          "caption": "The image shows a person wearing a black leather jacket with a fur-lined hood, a leopard print scarf, and a brown beanie hat. They have long, wavy hair and are wearing light blue jeans with a floral pattern. The person is carrying a backpack and has earphones hanging from their jacket pocket. The setting appears to be an urban street with buildings, cars, and streetlights in the background. The overall style suggests a casual, streetwear look suitable for everyday wear.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "hooded coat",
+                "colors": [
+                  "black"
+                ],
+                "patterns": [
+                  "leopard print"
+                ],
+                "material": "leather",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              },
+              {
+                "category": null,
+                "subcategory": "jeans",
+                "colors": [
+                  "blue"
+                ],
+                "patterns": [
+                  "floral"
+                ],
+                "material": "cotton",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "hat",
+                "colors": []
+              },
+              {
+                "category": "neckwear",
+                "subcategory": "scarf",
+                "colors": [
+                  "brown"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": "outdoors",
+              "environment": null,
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 4,
+          "score": 0.0273,
+          "image_id": "IMG_3f5a31080d6f8e5a",
+          "filename": "4e753140d7f5a78ba6b73714f7289706.jpg",
+          "image_path": "data\\images\\test\\4e753140d7f5a78ba6b73714f7289706.jpg",
+          "caption": "The image shows a person wearing a black strapless top with a white, blue, and black striped skirt. The outfit is accessorized with a necklace and black high-heeled sandals. The setting appears to be an outdoor area with concrete pillars and an archway, suggesting a casual, possibly urban environment. The attire suggests a casual, streetwear style suitable for everyday wear.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "dress",
+                "subcategory": "strapless",
+                "colors": [
+                  "black",
+                  "white",
+                  "blue"
+                ],
+                "patterns": [
+                  "striped"
+                ],
+                "material": "cotton",
+                "fit": "slim",
+                "length": "full length",
+                "neckline": "v-neck"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "neckwear",
+                "subcategory": "necklace",
+                "colors": [
+                  "black"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": "outdoors",
+              "environment": "urban",
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 5,
+          "score": 0.0045,
+          "image_id": "IMG_0741e266a892b130",
+          "filename": "0d25b761d9b146cfa820b2a7364b5bf7.jpg",
+          "image_path": "data\\images\\test\\0d25b761d9b146cfa820b2a7364b5bf7.jpg",
+          "caption": "The image shows a person wearing a blue trench coat with a belt around the waist. The coat has a classic design with a high collar and a long length. The person is also wearing a patterned scarf around their neck. They have a red handbag slung over their shoulder. The setting appears to be an urban street with other people walking in the background. The style is casual yet stylish, suitable for everyday wear. The occasion seems to be a casual outing in an urban environment.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "trench coat",
+                "colors": [
+                  "blue"
+                ],
+                "patterns": [],
+                "material": "wool or cotton",
+                "fit": "straight fit",
+                "length": "long",
+                "neckline": null
+              }
+            ],
+            "accessories": [
+              {
+                "category": "neckwear",
+                "subcategory": "scarf",
+                "colors": [
+                  "red"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "casual outing"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": "street",
+              "activity": "walking"
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "label": "Compositional",
+      "query": "A white lace long-sleeve top layered under a blue patterned blouse, with blue plaid pants and a brown beret.",
+      "rationale": "Tests attribute binding across layered garments, trousers, and an accessory.",
+      "relevant_image_ids": [
+        "IMG_a53332df52ff8f4a"
+      ],
+      "relevant_rank": 1,
+      "hit_at_5": true,
+      "parsed_metadata": {
+        "garments": [
+          {
+            "category": "top",
+            "subcategory": null,
+            "colors": [
+              "white"
+            ],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          },
+          {
+            "category": "outerwear",
+            "subcategory": null,
+            "colors": [],
+            "patterns": [],
+            "material": null,
+            "fit": null,
+            "length": null,
+            "neckline": null
+          }
+        ],
+        "accessories": [
+          {
+            "category": "hat",
+            "subcategory": null,
+            "colors": []
+          }
+        ],
+        "outfit": {
+          "styles": [],
+          "occasions": []
+        },
+        "scene": {
+          "location": null,
+          "environment": null,
+          "activity": null
+        },
+        "person": {
+          "gender": null,
+          "num_people": null
+        }
+      },
+      "results": [
+        {
+          "rank": 1,
+          "score": 1.0,
+          "image_id": "IMG_a53332df52ff8f4a",
+          "filename": "005b37fce3c0f641d327d95dd832f51b.jpg",
+          "image_path": "data\\images\\test\\005b37fce3c0f641d327d95dd832f51b.jpg",
+          "caption": "The image shows a person wearing a white lace top with long sleeves, paired with a blue patterned blouse over it. The blouse has a high collar and is buttoned up to the neck. They are also wearing blue plaid pants. The person is accessorized with a brown beret hat and a bracelet on their left wrist. The setting appears to be a studio with an orange background. The outfit suggests a casual yet stylish look, possibly for a casual day out or a relaxed social gathering.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "top",
+                "subcategory": "lace",
+                "colors": [
+                  "white"
+                ],
+                "patterns": [
+                  "lacy"
+                ],
+                "material": "fabric",
+                "fit": "long-sleeved",
+                "length": "full-length",
+                "neckline": "high-collar"
+              },
+              {
+                "category": "top",
+                "subcategory": "blouse",
+                "colors": [
+                  "blue"
+                ],
+                "patterns": [],
+                "material": "fabric",
+                "fit": "button-down",
+                "length": "full-length",
+                "neckline": "collarless"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "beret",
+                "colors": []
+              },
+              {
+                "category": null,
+                "subcategory": "bracelet",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "social gathering"
+              ]
+            },
+            "scene": {
+              "location": "studio",
+              "environment": "office",
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 2,
+          "score": 0.1158,
+          "image_id": "IMG_3c48672ee4a52250",
+          "filename": "2bb3700b00be0b5dc63b73da24501546.jpg",
+          "image_path": "data\\images\\test\\2bb3700b00be0b5dc63b73da24501546.jpg",
+          "caption": "The image shows a woman walking down a runway at a fashion show. She is wearing a long-sleeved, striped blazer over a white blouse with a floral pattern. The blouse has a high collar and is paired with brown pants. She is holding a pink clutch purse in her left hand. The background features a large screen displaying the text \"WCFW\" and \"bloom.\" The setting appears to be an indoor fashion show with an audience seated in front of the runway.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "blazer",
+                "colors": [],
+                "patterns": [
+                  "floral"
+                ],
+                "material": "cotton",
+                "fit": "long-sleeve",
+                "length": "full-length",
+                "neckline": "high-collar"
+              },
+              {
+                "category": "top",
+                "subcategory": "blouse",
+                "colors": [
+                  "white"
+                ],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "full-length",
+                "length": "full-length",
+                "neckline": "none"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "bag",
+                "subcategory": "purse",
+                "colors": [
+                  "pink"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "runway"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": null
+            },
+            "person": {
+              "gender": "woman",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 3,
+          "score": 0.0234,
+          "image_id": "IMG_85e519349349c3b4",
+          "filename": "1e7af28b45470cbbf44bbc07b716b1d1.jpg",
+          "image_path": "data\\images\\test\\1e7af28b45470cbbf44bbc07b716b1d1.jpg",
+          "caption": "The image shows a person wearing a white hoodie with a graphic design featuring a stylized character. The hoodie has long sleeves, a high neck, and a drawstring at the front. The person is also wearing black pants. The setting appears to be an indoor environment with a neutral-colored wall in the background. There is another person partially visible in the background, but their face is not clear. The overall style suggests casual wear, possibly for everyday use.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "hooded coat",
+                "colors": [
+                  "white"
+                ],
+                "patterns": [],
+                "material": "polyester",
+                "fit": "loose",
+                "length": "long",
+                "neckline": "high"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "none",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": "indoors",
+              "environment": "office",
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 4,
+          "score": 0.0198,
+          "image_id": "IMG_cf8e955580d79142",
+          "filename": "2bd3170874fb32e36a204df9217de42b.jpg",
+          "image_path": "data\\images\\test\\2bd3170874fb32e36a204df9217de42b.jpg",
+          "caption": "The image shows a model wearing a grey hoodie with a textured, fur-like outer layer in shades of green and brown. The hoodie has a high collar and long sleeves. The model also wears a dark green top underneath the hoodie. The setting appears to be a fashion runway show, with a blurred audience in the background and a camera capturing the event. The overall style is modern and stylish, suitable for a fashion runway event.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "hooded coat",
+                "colors": [
+                  "grey",
+                  "green",
+                  "brown"
+                ],
+                "patterns": [],
+                "material": "polyester",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "high"
+              },
+              {
+                "category": "top",
+                "subcategory": "shirt",
+                "colors": [],
+                "patterns": [],
+                "material": "cotton",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "unspecified"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "unspecified",
+                "colors": []
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "modern",
+                "stylish"
+              ],
+              "occasions": [
+                "fashion runway"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": null,
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        },
+        {
+          "rank": 5,
+          "score": 0.0186,
+          "image_id": "IMG_a0730fb3a5dd3878",
+          "filename": "1a3b75fa84d23692f516ad00fe2ae2fc.jpg",
+          "image_path": "data\\images\\test\\1a3b75fa84d23692f516ad00fe2ae2fc.jpg",
+          "caption": "The image shows a person wearing a navy blue, textured bomber jacket with long sleeves and a high collar. The jacket is zipped up to the chest, revealing a white collared shirt underneath. The person has short, straight hair with bangs and is wearing gold hoop earrings. The setting appears to be indoors, possibly in an urban environment, as indicated by the brick wall and wooden furniture in the background. The overall style suggests a casual yet stylish look, suitable for everyday wear.",
+          "metadata": {
+            "garments": [
+              {
+                "category": "outerwear",
+                "subcategory": "bomber",
+                "colors": [
+                  "navy"
+                ],
+                "patterns": [],
+                "material": "polyester",
+                "fit": "unspecified",
+                "length": "unspecified",
+                "neckline": "high"
+              }
+            ],
+            "accessories": [
+              {
+                "category": "hat",
+                "subcategory": "none",
+                "colors": []
+              },
+              {
+                "category": "jewellery",
+                "subcategory": "earrings",
+                "colors": [
+                  "gold"
+                ]
+              }
+            ],
+            "outfit": {
+              "styles": [
+                "casual"
+              ],
+              "occasions": [
+                "everyday"
+              ]
+            },
+            "scene": {
+              "location": null,
+              "environment": "urban",
+              "activity": null
+            },
+            "person": {
+              "gender": "person",
+              "num_people": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

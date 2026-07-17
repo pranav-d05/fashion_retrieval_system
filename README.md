@@ -57,6 +57,17 @@ Common environment variables:
 - `QDRANT_HOST` and `QDRANT_API_KEY` for Qdrant server / cloud connections
 - `HF_TOKEN` for Hugging Face model downloads
 
+## Reproducibility
+
+The repository is designed to be reproducible from a clean checkout.
+
+- `pyproject.toml` and `uv.lock` are the source of truth for dependencies.
+- `requirements.txt` is an exported snapshot and should not be edited by hand.
+- `configs/config.yaml` and `configs/models.yaml` centralize runtime settings and model IDs.
+- The code does not rely on local absolute paths for core behavior; Hugging Face cache paths are environment-driven.
+- For a fresh run, install dependencies, copy `.env.example` to `.env`, set any Qdrant / HF credentials you need, then run `uv run build-index` followed by `uv run search`.
+- Generated runtime artifacts such as `.qdrant/`, `data/.index_staging/`, `evaluation_results.json`, and `dataset_eval_results.json` are not required in source control.
+
 ## Project Structure
 
 ```
@@ -114,3 +125,5 @@ Remove-Item -Recurse -Force data/.index_staging   # Windows (PowerShell)
 # or: rm -rf data/.index_staging                  # Linux / macOS
 uv run build-index --image-dir data/images
 ```
+
+If you want to reproduce the evaluation metrics from scratch, rebuild the index first, then run the evaluation scripts against the generated staging files. The scripts assume the project root as the working directory and will write fresh JSON outputs when executed.

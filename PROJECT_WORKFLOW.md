@@ -7,7 +7,7 @@ This document describes how the current project works end-to-end, based on the p
 The system retrieves fashion images using a multimodal pipeline:
 - visual similarity (FashionCLIP image/text space)
 - caption semantic similarity (BGE embedding space)
-- structured metadata filtering (garments, accessories, outfit, scene, person)
+- structured metadata filtering (garments, accessories, scene, person.gender)
 - cross-encoder reranking
 
 It has two major phases:
@@ -111,9 +111,10 @@ There is backward-compatible payload parsing support for legacy nested `metadata
 
 `build_metadata_filter(...)` creates Qdrant filter conditions from non-null query metadata:
 - nested matching over `garments` and `accessories`
-- outfit filters over `outfit.styles`, `outfit.occasions`
 - scene filters over `scene.location`, `scene.environment`, `scene.activity`
-- person filters over `person.gender`, `person.num_people`
+- person filters over `person.gender`
+
+The filter intentionally excludes `outfit.*`, `person.num_people`, and other open-vocabulary fields. Those attributes are still stored in payloads and captions, but they are not used as hard gates during retrieval because the parser and extractor do not produce them reliably enough for exact filtering.
 
 ## 6. Online Retrieval Workflow
 

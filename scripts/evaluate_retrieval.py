@@ -49,9 +49,16 @@ import random
 import time
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
 
 def _configure_hf_cache() -> None:
-    hf_home = os.environ.get("HF_HOME", r"D:\hf_cache")
+    if load_dotenv is not None:
+        load_dotenv()
+    hf_home = os.environ.get("HF_HOME") or str(Path.home() / ".cache" / "huggingface")
     os.environ.setdefault("HF_HOME", hf_home)
     os.environ.setdefault("HUGGINGFACE_HUB_CACHE", os.path.join(hf_home, "hub"))
 

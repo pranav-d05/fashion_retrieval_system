@@ -17,11 +17,18 @@ import os
 import sys
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
 
 def _configure_hf_cache() -> None:
+    if load_dotenv is not None:
+        load_dotenv()
     # Honour any HF_HOME already set in the environment / .env file;
-    # only fall back to D:\hf_cache if nothing is configured.
-    hf_home = os.environ.get("HF_HOME", r"D:\hf_cache")
+    # otherwise fall back to the user's Hugging Face cache directory.
+    hf_home = os.environ.get("HF_HOME") or str(Path.home() / ".cache" / "huggingface")
     os.environ.setdefault("HF_HOME", hf_home)
     os.environ.setdefault("HUGGINGFACE_HUB_CACHE", os.path.join(hf_home, "hub"))
 

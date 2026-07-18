@@ -61,6 +61,8 @@ fashion-retrieval-system/
 ├── configs/
 │   ├── config.yaml          # Qdrant, retrieval params, batch sizes
 │   └── models.yaml          # All model names/paths
+├── data/
+│   └── images/              # Raw user dataset
 ├── src/
 │   ├── embeddings/          # FashionCLIP and BGE encoders
 │   ├── indexing/            # Image loading and offline indexing orchestration

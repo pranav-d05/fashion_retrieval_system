@@ -51,6 +51,7 @@ dev = [
 build-index = "scripts.build_index:main"
 search = "scripts.search_cli:main"
 evaluate = "scripts.evaluate:main"
+download-models = "scripts.download_models:main"
 
 [build-system]
 requires = ["hatchling"]

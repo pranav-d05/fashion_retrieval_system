@@ -41,6 +41,9 @@ htmlcov/
 
 # Data / Models (usually large — add exceptions as needed)
 data/
+!data/images/
+data/images/*
+!data/images/.gitkeep
 models/
 eval_query_outputs/
 .qdrant/

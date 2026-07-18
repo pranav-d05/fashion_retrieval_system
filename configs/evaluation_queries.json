@@ -12,6 +12,12 @@
     "rationale": "Tests clothing together with the dominant catalog context: a runway show."
   },
   {
+    "label": "Palm Tree Dress",
+    "query": "A woman in a lime green dress carrying a white handbag while walking along a palm-lined street.",
+    "relevant_image_ids": ["IMG_3f56a261bc9f2a44"],
+    "rationale": "Tests color, accessory, and urban outdoor context."
+  },
+  {
     "label": "Complex Semantic",
     "query": "A woman in a fitted brown one-shoulder dress standing outdoors beside a black metal fence.",
     "relevant_image_ids": ["IMG_a2f135b085a4baea"],

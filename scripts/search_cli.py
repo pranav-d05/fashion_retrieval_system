@@ -56,18 +56,44 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Number of results to display (overrides config rerank_top_k).",
     )
+    parser.add_argument(
+        "--rank1-only",
+        action="store_true",
+        help="Display only the top-1 result for each query.",
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        default=None,
+        help="Write compact JSON output for each query to this file (overwrites each run/query).",
+    )
+    parser.add_argument(
+        "--open-images",
+        action="store_true",
+        help="Open result images in the OS viewer. Disabled by default to avoid popup clutter.",
+    )
     return parser.parse_args(argv)
 
 
-def _print_results(results, top_k: int, parsed_metadata=None) -> None:
+def _print_results(
+    results,
+    top_k: int,
+    parsed_metadata=None,
+    *,
+    rank1_only: bool = False,
+    open_images: bool = False,
+) -> None:
     """Pretty-print retrieval results to stdout."""
     from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
 
     console = Console()
+    display_k = 1 if rank1_only else top_k
+    shown_results = results[:display_k]
+
     table = Table(
-        title=f"Top {min(len(results), top_k)} Fashion Matches",
+        title=f"Top {len(shown_results)} Fashion Matches",
         show_header=True,
         header_style="bold cyan",
         show_lines=True,
@@ -76,7 +102,7 @@ def _print_results(results, top_k: int, parsed_metadata=None) -> None:
     table.add_column("Score", width=8, justify="right")
     table.add_column("Caption", min_width=40)
 
-    for rank, result in enumerate(results[:top_k], start=1):
+    for rank, result in enumerate(shown_results, start=1):
         table.add_row(
             str(rank),
             f"{result.score:.4f}",
@@ -95,7 +121,7 @@ def _print_results(results, top_k: int, parsed_metadata=None) -> None:
             )
         )
 
-    for rank, result in enumerate(results[:top_k], start=1):
+    for rank, result in enumerate(shown_results, start=1):
         image_path = Path(result.image_path)
         console.print()
         console.print(
@@ -108,18 +134,32 @@ def _print_results(results, top_k: int, parsed_metadata=None) -> None:
             )
         )
 
-        if image_path.exists():
+        if open_images and image_path.exists():
             try:
                 _open_image(image_path)
                 console.print(f"[dim]Opened image: {image_path.name}[/dim]")
             except Exception as exc:  # noqa: BLE001
                 console.print(f"[dim]Could not open image: {exc}[/dim]")
-        else:
+        elif open_images:
             console.print(f"[dim]Image not found: {image_path}[/dim]")
 
 
 def _open_image(image_path: Path) -> None:
-    """Open an image in the default viewer for the current platform."""
+    """Open an image in VS Code when possible, else fall back to OS viewer."""
+    # Prefer VS Code editor tabs so results stay inside the workspace flow.
+    code_commands = ["code"]
+    if sys.platform.startswith("win"):
+        # In terminal sessions, `code` may not be resolvable but `code.cmd` or
+        # `code.exe` is available in PATH.
+        code_commands = ["code.cmd", "code.exe", "code"]
+
+    for cmd in code_commands:
+        try:
+            subprocess.Popen([cmd, "-r", str(image_path)])
+            return
+        except Exception:  # noqa: BLE001
+            continue
+
     if sys.platform.startswith("win"):
         os.startfile(image_path)  # type: ignore[attr-defined]
         return
@@ -131,7 +171,15 @@ def _open_image(image_path: Path) -> None:
     subprocess.Popen(["xdg-open", str(image_path)])
 
 
-def _run_query(query: str, pipeline: dict, top_k: int) -> None:
+def _run_query(
+    query: str,
+    pipeline: dict,
+    top_k: int,
+    *,
+    rank1_only: bool = False,
+    output_file: str | None = None,
+    open_images: bool = False,
+) -> None:
     import logging
     logger = logging.getLogger(__name__)
 
@@ -141,7 +189,36 @@ def _run_query(query: str, pipeline: dict, top_k: int) -> None:
     candidates = pipeline["retriever"].retrieve(query, parsed)
     results = pipeline["reranker"].rerank(query, candidates)
 
-    _print_results(results, top_k, parsed_metadata=parsed)
+    _print_results(
+        results,
+        top_k,
+        parsed_metadata=parsed,
+        rank1_only=rank1_only,
+        open_images=open_images,
+    )
+
+    if output_file:
+        output_path = Path(output_file)
+        display_k = 1 if rank1_only else top_k
+        payload = {
+            "query": query,
+            "rank1_only": rank1_only,
+            "parsed_metadata": parsed.model_dump(),
+            "results": [
+                {
+                    "rank": rank,
+                    "score": round(float(result.score), 4),
+                    "image_id": result.image_id,
+                    "image_path": result.image_path,
+                    "caption": result.caption,
+                    "metadata": result.metadata.model_dump(),
+                }
+                for rank, result in enumerate(results[:display_k], start=1)
+            ],
+        }
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        logger.info("Wrote query output to %s", output_path)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -196,7 +273,14 @@ def main(argv: list[str] | None = None) -> None:
 
     # ---- Single-query or REPL mode ----
     if args.query:
-        _run_query(args.query, pipeline, top_k)
+        _run_query(
+            args.query,
+            pipeline,
+            top_k,
+            rank1_only=args.rank1_only,
+            output_file=args.output_file,
+            open_images=args.open_images,
+        )
     else:
         # Interactive REPL
         from rich.console import Console
@@ -219,7 +303,14 @@ def main(argv: list[str] | None = None) -> None:
                 break
 
             try:
-                _run_query(query, pipeline, top_k)
+                _run_query(
+                    query,
+                    pipeline,
+                    top_k,
+                    rank1_only=args.rank1_only,
+                    output_file=args.output_file,
+                    open_images=args.open_images,
+                )
             except Exception as exc:  # noqa: BLE001
                 logger.error("Query failed: %s", exc)
 

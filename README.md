@@ -68,6 +68,12 @@ The repository is designed to be reproducible from a clean checkout.
 - For a fresh run, install dependencies, copy `.env.example` to `.env`, set any Qdrant / HF credentials you need, then run `uv run build-index` followed by `uv run search`.
 - Generated runtime artifacts such as `.qdrant/`, `data/.index_staging/`, `evaluation_results.json`, and `dataset_eval_results.json` are not required in source control.
 
+## Canonical Vocabulary & Normalization
+
+The system enforces a small canonical vocabulary for metadata fields that are used as hard filters during retrieval (garment/accessory category, colours, scene, and person gender). The canonical sets and synonym maps live in `src/vocab.py` and are applied programmatically by both the offline metadata extractor and the online query parser so stored payloads and parsed queries share the same normalized form. Unknown or untrusted values are dropped rather than used as exact-match filters to avoid model hallucination causing incorrect zero-hit filters.
+
+See `src/vocab.py` for the canonical lists and `src/retrieval/query_parser.py` / `src/vlm/metadata_extractor.py` for where normalization is applied.
+
 ## Project Structure
 
 ```

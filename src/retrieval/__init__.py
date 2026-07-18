@@ -3,12 +3,14 @@
 from importlib import import_module
 from typing import Any
 
-__all__ = ["QueryParser", "Retriever", "Reranker"]
+__all__ = ["QueryParser", "Retriever", "Reranker", "aggregate_metrics", "evaluate_rankings"]
 
 _MODULES = {
     "QueryParser": "src.retrieval.query_parser",
     "Retriever": "src.retrieval.retriever",
     "Reranker": "src.retrieval.reranker",
+    "aggregate_metrics": "src.retrieval.metrics",
+    "evaluate_rankings": "src.retrieval.metrics",
 }
 
 

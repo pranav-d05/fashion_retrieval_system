@@ -99,6 +99,27 @@ Each document in Qdrant contains the raw text (`caption`, `image_path`) and the 
 
 ---
 
+## Canonical Vocabulary & Normalization
+
+Certain metadata fields are treated as "canonical" and are used for hard payload filtering in Qdrant. These include:
+
+- Garment categories (e.g. `top`, `bottom`, `dress`, `outerwear`, `skirt`, `jumpsuit`)
+- Accessory categories (e.g. `bag`, `shoes`, `hat`, `jewellery`, `belt`, `watch`, `sunglasses`, `scarf`, `neckwear`)
+- Colours (an ~18-colour palette such as `black`, `white`, `grey`, `navy`, `blue`, `red`, ...)
+- Scene fields (`scene.location`, `scene.environment`, `scene.activity`)
+- Person gender (`person.gender`)
+
+The canonical lists and per-term synonym maps are implemented in `src/vocab.py`. The function `normalize_metadata_vocab()` enforces these rules: it accepts exact canonical matches or known synonyms (mapping them to canonical values) and drops any unrecognized values rather than attempting to guess. This normalization is applied in two places:
+
+- Offline: `src/vlm/metadata_extractor.py` normalizes extracted metadata before it is upserted to Qdrant.
+- Online: `src/retrieval/query_parser.py` normalizes parsed query metadata before building the payload filter.
+
+By normalizing both stored payloads and query values, the system ensures exact-match filters in Qdrant are trustworthy and that small-model hallucinations do not create overly strict filters that produce zero hits.
+
+For maintainers: tune the canonical sets and `_SYNONYMS` maps in `src/vocab.py` to match your indexed payloads; any change to these vocabularies should be coordinated with re-indexing so payload values and query normalization remain aligned.
+
+---
+
 ## 5. Offline Indexing (Deep Dive)
 
 Entry Point: `scripts/build_index.py`

@@ -116,6 +116,8 @@ There is backward-compatible payload parsing support for legacy nested `metadata
 
 The filter intentionally excludes `outfit.*`, `person.num_people`, and other open-vocabulary fields. Those attributes are still stored in payloads and captions, but they are not used as hard gates during retrieval because the parser and extractor do not produce them reliably enough for exact filtering.
 
+Normalization note: The parser and offline extractor normalize the small, hard-filterable subset of metadata to a canonical vocabulary before the values are used to build Qdrant filters. The canonical lists and synonym mappings are defined in `src/vocab.py` and are enforced by `normalize_metadata_vocab()`; any value not in the canonical set or synonym maps is dropped (set to `null`/removed) to avoid strict filters being created from model hallucinations. This ensures stored payloads and parsed queries are compatible for reliable exact-match filtering.
+
 ## 6. Online Retrieval Workflow
 
 Primary entry point: `scripts/search_cli.py`.

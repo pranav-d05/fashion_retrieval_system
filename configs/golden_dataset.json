@@ -1,0 +1,72 @@
+[
+  {
+    "category": "attribute",
+    "label": "Attribute Coat A",
+    "query": "A runway model wearing a black hooded coat over a red top and a black skirt.",
+    "relevant_image_ids": ["IMG_5e281fad2efb1c68"],
+    "rationale": "Tests core garment and colour attributes on a real indexed image."
+  },
+  {
+    "category": "attribute",
+    "label": "Attribute Coat B",
+    "query": "A male model walking down a runway in a long green patchwork coat with a hood and black pants.",
+    "relevant_image_ids": ["IMG_24637072f5e2f61e"],
+    "rationale": "Tests outerwear, colour, pattern, and bottom matching on a real indexed image."
+  },
+  {
+    "category": "context",
+    "label": "Runway Context A",
+    "query": "A woman in a beige short-sleeve jacket with light-blue trim and a pale yellow knee-length skirt walking on a fashion-show runway.",
+    "relevant_image_ids": ["IMG_a2d88e92a4f63d31"],
+    "rationale": "Tests clothing plus the dominant runway context."
+  },
+  {
+    "category": "context",
+    "label": "Runway Context B",
+    "query": "A model in a bright red dress with black shoes on the runway.",
+    "relevant_image_ids": ["IMG_b484ff594cc4b3fd"],
+    "rationale": "Tests a simpler runway scene with a strong colour cue."
+  },
+  {
+    "category": "complex_semantic",
+    "label": "Outdoor Dress A",
+    "query": "A woman in a fitted brown one-shoulder dress standing outdoors beside a black metal fence.",
+    "relevant_image_ids": ["IMG_a2f135b085a4baea"],
+    "rationale": "Tests garment shape, colour, pose, and outdoor context together."
+  },
+  {
+    "category": "complex_semantic",
+    "label": "Outdoor Dress B",
+    "query": "A woman wearing a fitted brown one-shoulder dress outdoors next to a black fence.",
+    "relevant_image_ids": ["IMG_a2f135b085a4baea"],
+    "rationale": "Paraphrase of the same grounded outdoor dress scene for robustness."
+  },
+  {
+    "category": "style_inference",
+    "label": "Style Inference A",
+    "query": "A casual edgy runway outfit with a sheer beige sleeveless top and flared blue jeans.",
+    "relevant_image_ids": ["IMG_e36ea53104fddd95"],
+    "rationale": "Tests style language alongside garment attributes."
+  },
+  {
+    "category": "style_inference",
+    "label": "Style Inference B",
+    "query": "A casual stylish outfit with a white lace top, a blue patterned blouse, blue plaid pants, and a brown beret.",
+    "relevant_image_ids": ["IMG_a53332df52ff8f4a"],
+    "rationale": "Tests style cues together with accessory and layered-garment grounding."
+  },
+  {
+    "category": "composition",
+    "label": "Compositional A",
+    "query": "A white lace long-sleeve top layered under a blue patterned blouse, with blue plaid pants and a brown beret.",
+    "relevant_image_ids": ["IMG_a53332df52ff8f4a"],
+    "rationale": "Tests attribute binding across layered garments, trousers, and an accessory."
+  },
+  {
+    "category": "composition",
+    "label": "Compositional B",
+    "query": "A layered look with a white lace top, blue patterned blouse, blue plaid pants, and a brown beret.",
+    "relevant_image_ids": ["IMG_a53332df52ff8f4a"],
+    "rationale": "Paraphrase focused on the same compositional grounding."
+  }
+]

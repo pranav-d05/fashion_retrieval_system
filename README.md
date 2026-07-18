@@ -4,27 +4,7 @@
 
 ## Architecture
 
-```
-Offline Indexing Pipeline
-  Image Dataset → Preprocessing → Qwen2.5-VL / Florence-2
-                        ├─ Natural Language Caption → BGE Text Encoder → caption_embedding
-                        ├─ Caption → Qwen/Qwen2.5-1.5B-Instruct → structured metadata
-                        └─ FashionCLIP Image Encoder → fashionclip_embedding
-          ↓
-  Qdrant Collection (named vectors + structured payload)
-
-Online Retrieval Pipeline
-  User Query → Preprocessing →
-      ├─ FashionCLIP Text Encoder → query embedding
-      ├─ BGE Text Encoder → caption query embedding
-                        └─ Qwen/Qwen2.5-1.5B-Instruct → structured query metadata
-          ↓
-  Qdrant Hybrid Retrieval (named-vector search + payload filtering)
-          ↓
-  Candidate Image IDs → Cross-Encoder Reranking → Qdrant Lookup
-          ↓
-  Final Ranked Results
-```
+<img src="Fashion Image Retrieval-2026-07-17-120842.png" alt="Architecture Diagram" width="100%"/>
 
 ## Quick Start
 

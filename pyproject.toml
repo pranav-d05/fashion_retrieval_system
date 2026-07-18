@@ -50,7 +50,7 @@ dev = [
 [project.scripts]
 build-index = "scripts.build_index:main"
 search = "scripts.search_cli:main"
-evaluate-golden = "scripts.evaluate_golden_dataset:main"
+evaluate = "scripts.evaluate:main"
 
 [build-system]
 requires = ["hatchling"]

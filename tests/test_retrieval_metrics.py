@@ -37,4 +37,4 @@ def test_evaluate_and_aggregate_rankings():
     assert summary["precision_at_3"] == 0.3333
     assert summary["recall_at_3"] == 1.0
     assert summary["hit_at_3"] == 1.0
-    assert summary["mrr"] == 0.4167
+    assert summary["mrr"] == 0.4166

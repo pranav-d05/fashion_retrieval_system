@@ -42,6 +42,7 @@ htmlcov/
 # Data / Models (usually large — add exceptions as needed)
 data/
 models/
+eval_query_outputs/
 .qdrant/
 *.pkl
 *.bin
